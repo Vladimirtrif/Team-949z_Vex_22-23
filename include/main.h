@@ -78,8 +78,8 @@ void opcontrol(void);
 #define RightMiddlePort 16
 #define RightBackPort 20
 
-#define frontLift 8
-#define backLift 18
+#define frontlift 8
+#define backlift 18
 
 #define ConveyorPort 'A'
 #define SideArmLeftPort 'B'
@@ -88,6 +88,8 @@ void opcontrol(void);
 #define VisionPort 10
 #define RedSignature 1
 #define YellowSignature 2
+
+#define opticalPort 4
 
 #define RedSignatureId 1
 #define BlueSignatureId 2
