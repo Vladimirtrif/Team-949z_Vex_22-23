@@ -55,30 +55,6 @@ void initialize()
 
 	pros::lcd::initialize();
 	pros::lcd::set_text(1, "Selected Auton is Right Middle");
-	if (pros::lcd::read_buttons() == 4)
-		{
-			autonSide = 1;
-		}
-		else if (pros::lcd::read_buttons() == 2)
-		{
-			autonSide = 2;
-		}
-		else if(pros::lcd::read_buttons() == 1) {
-			autonSide = 3;
-		}
-		if (autonSide == 1)
-		{
-			pros::lcd::set_text(1, "Selected Auton is Right");
-		}
-		if (autonSide == 2)
-		{
-			pros::lcd::set_text(1, "Selected Auton is Left");
-		}
-		if (autonSide == 4)
-		{
-			pros::lcd::set_text(1, "Selected Auton is Left Middle");
-		}
-
 	pros::c::adi_pin_mode(SideArmLeftPort, OUTPUT);
 	pros::c::adi_digital_write(SideArmLeftPort, LOW);
 	pros::c::adi_pin_mode(SideArmRightPort, OUTPUT);
@@ -246,113 +222,6 @@ class Autonomous
 				pros::c::adi_digital_write(SideArmLeftPort, LOW);
 				pros::c::adi_pin_mode(SideArmRightPort, OUTPUT);
 				pros::c::adi_digital_write(SideArmRightPort, LOW);
-
-				// moving forward to goal and picking it up
-				Move(1600, 200, 200, true, 1700, -200);
-				Move(300, 150, 150, true, 10000, 200);
-				lift_Front.move_relative(10000, 200);
-				pros::delay(600);
-				Move(1200, -200, -200, true, 1000, 200);
-				Turn(-85, 150);
-				pros::delay(1000);
-				Move(600, -200, -200, false, 0, 0);
-				// lift_back.move_relative(-2100, 100);
-				pros::delay(1400);
-				MoveVisionAssisted(2000, -200);
-				pros::delay(50);
-				// lift_back.move_relative(1150, 100);
-				pros::delay(1300);
-				Move(600, 150, 150, false, 0, 0);
-				Turn(-145, 150);
-				pros::delay(1400);
-				// start conveyor, move towards placed rings, pick up rings
-				pros::c::adi_digital_write(ConveyorPort, LOW);
-				pros::delay(250);
-				// lift_back.move_velocity(-70);
-				pros::delay(250);
-				Move(1550, 100, 100, false, 0, 0);
-				pros::delay(500);
-				// move back and forth
-				Move(1000, -100, -100, false, 0, 0);
-				pros::delay(1500);
-				Move(1000, 100, 100, false, 0, 0);
-				pros::delay(500);
-				// move back and forth
-				Move(1000, -100, -100, false, 0, 0);
-				pros::delay(1500);
-				Move(1000, 100, 100, false, 0, 0);
-				pros::delay(500);
-				// move back and forth
-				Move(1000, -100, -100, false, 0, 0);
-				pros::delay(1500);
-				Move(1000, 100, 100, false, 0, 0);
-				pros::delay(500);
-				// move back
-				Move(1000, -100, -100, false, 0, 0);
-				pros::c::adi_digital_write(ConveyorPort, HIGH);
-			}
-			else if (autonSide == 2)
-			{
-
-				// lift_Front.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-				// lift_back.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-				pros::c::adi_pin_mode(ConveyorPort, OUTPUT);
-				pros::c::adi_digital_write(ConveyorPort, HIGH);
-				pros::c::adi_pin_mode(SideArmLeftPort, OUTPUT);
-				pros::c::adi_digital_write(SideArmLeftPort, LOW);
-				pros::c::adi_pin_mode(SideArmRightPort, OUTPUT);
-				pros::c::adi_digital_write(SideArmRightPort, LOW);
-				// moving forward to goal and picking it up
-				Move(2000, 200, 200, true, 1700, -200);
-				Move(300, 160, 10, true, 1000, 100);
-				lift_Front.move_relative(10000, 100);
-				pros::delay(1300);
-				Move(1400, -160, -160, true, 0, 0);
-				pros::delay(200);
-				Turn(-54, 150);
-				pros::delay(1000);
-				MoveVisionAssisted(800, -150);
-				pros::c::adi_digital_write(ConveyorPort, LOW);
-			}
-			else if (autonSide == 3)
-			{
-				Move(2350, 200, 200, true, 1700, -200); // move forward towards middle goal and lower front arm
-				Move(400, 100, 100, false, 0, 0);		// slow down and keep moving
-				lift_Front.move_relative(10000, 200);	// front lift up
-				pros::delay(1300);						// delay for front lift
-				// lift_back.move_relative(-2100, 100); //put down back lift
-				pros::delay(1300);							 // delay for back lift
-				Move(1000, -200, -200, false, 0, 0);		 // move back
-				Turn(-25, 150);								 // turn towards allience goal
-				pros::delay(500);							 // delay for turn
-				MoveVisionAssisted(2000, -150); // move towatds blue goal with vision assist
-				pros::delay(50);							 // delay
-				pros::delay(1300);				  // delay for back lift
-				Move(600, 150, 150, false, 0, 0); // move forwards(away from our side)
-				Turn(-120, 150);				  // turn for front to face our side
-				pros::delay(1000);				  // delay for turn
-				pros::c::adi_digital_write(ConveyorPort, LOW);
-				pros::delay(100);
-				pros::delay(200);
-				Move(1000, 100, 100, false, 0, 0);
-				pros::delay(400);
-				pros::c::adi_digital_write(ConveyorPort, HIGH);
-				pros::delay(250);
-			}
-			else if (autonSide == 4)
-			{
-				Move(2700, 200, 200, true, 1700, -200);
-				Move(400, 100, 100, false, 0, 0);
-				lift_Front.move_relative(10000, 200);
-				pros::delay(1500);
-				Move(2500, -200, -200, false, 0, 0);
-				Turn(-90, 150);
-				pros::delay(500);
-				MoveVisionAssisted(800, -150);
-				pros::c::adi_digital_write(ConveyorPort, LOW);
-				pros::delay(250);
-				pros::c::adi_digital_write(ConveyorPort, HIGH);
-				pros::delay(250);
 			}
 		}
 	};
@@ -419,17 +288,13 @@ class Autonomous
 
 		while (true)
 		{
-			if (pros::lcd::read_buttons() == 4)
+			/*if (pros::lcd::read_buttons() == 4)
 			{
 				autonSide = 1;
 			}
 			else if (pros::lcd::read_buttons() == 2)
 			{
 				autonSide = 2;
-			}
-			else if (pros::lcd::read_buttons() == 1)
-			{
-				autonSide = 4;
 			}
 			if (autonSide == 1)
 			{
@@ -438,11 +303,7 @@ class Autonomous
 			if (autonSide == 2)
 			{
 				pros::lcd::set_text(1, "Selected Auton is Left");
-			}
-			if (autonSide == 4)
-			{
-				pros::lcd::set_text(1, "Selected Auton is Left Middle");
-			}
+			}*/
 
 			int leftSpeed = 0;
 			int rightSpeed = 0;
@@ -499,59 +360,18 @@ class Autonomous
 				lift_Back.move_velocity(0);
 			}
 
-			if (master.get_digital(DIGITAL_L1) && ConveyorOn == false)
-			{
-				// lift_back.move_velocity(100); // pick a velocity for the lifting
-			}
-			else if (master.get_digital(DIGITAL_L2) && ConveyorOn == false)
-			{
-				// lift_back.move_velocity(-100);
-			}
-			else if (ConveyorOn == false)
-			{
-				// lift_back.move_velocity(0);
-			}
 
 			if (master.get_digital(DIGITAL_B))
 			{
-				// lift_back.move_velocity(0);
-				ConveyorOn = true;
 				pros::c::adi_digital_write(ConveyorPort, LOW);
-				pros::delay(250);
-				// lift_back.move_velocity(-70);
 			}
 
-			if (master.get_digital(DIGITAL_X))
-			{
-				// lift_back.move_velocity(0);
-				ConveyorOn = true;
-				pros::c::adi_digital_write(ConveyorPort, LOW);
-				pros::delay(250);
-				// lift_back.move_velocity(70);
-			}
 
 			if (master.get_digital(DIGITAL_Y))
 			{
-				// lift_back.move_velocity(0);
 				pros::c::adi_digital_write(ConveyorPort, HIGH);
-				pros::delay(250);
-				ConveyorOn = false;
 			}
-			if (master.get_digital_new_press(DIGITAL_A))
-			{
-				if (SideArmsDown == false)
-				{
-					pros::c::adi_digital_write(SideArmLeftPort, HIGH);
-					pros::c::adi_digital_write(SideArmRightPort, HIGH);
-					SideArmsDown = true;
-				}
-				else
-				{
-					pros::c::adi_digital_write(SideArmLeftPort, LOW);
-					pros::c::adi_digital_write(SideArmRightPort, LOW);
-					SideArmsDown = false;
-				}
-			}
+			
 			left_front.move(leftSpeed * 1.574);
 			left_middle.move(leftSpeed * 1.574);
 			left_back.move(leftSpeed * 1.574);
