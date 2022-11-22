@@ -6,6 +6,7 @@
 #include "pros/vision.h"
 #include "pros/optical.h"
 #include "pros/optical.hpp"
+
 /*
  * Presence of these two variables here replaces _pros_ld_timestamp step in common.mk.
  * THis way we get equivalent behavior without extra .c file to compile, and this faster build.
@@ -21,29 +22,7 @@ extern "C" char const *const _PROS_COMPILE_DIRECTORY = "";
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define sign(x) ((x) > 0 ? 1 : -1)
 
-int autonSide = 3; // 1 is right goal rush + auton point, 2 is left goal rush, 3 is right wings goal rush
-
-/**
- * A callback function for LLEMU's center button.
- *
- * When this callback is fired, it will toggle line 2 of the LCD text between
- * "I was pressed!" and nothing.
- */
-/*
-void on_center_button()
-{
-	static bool pressed = false;
-	pressed = !pressed;
-	if (pressed)
-	{
-		pros::lcdset_text(2, "I was pressed!");
-	}
-	else
-	{
-		pros::lcdclear_line(2);
-	}
-}
-*/
+int autonSide = 1;
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -54,11 +33,19 @@ void initialize()
 {
 
 	pros::lcd::initialize();
-	pros::lcd::set_text(1, "Selected Auton is Right Middle");
-	pros::c::adi_pin_mode(SideArmLeftPort, OUTPUT);
-	pros::c::adi_digital_write(SideArmLeftPort, LOW);
-	pros::c::adi_pin_mode(SideArmRightPort, OUTPUT);
-	pros::c::adi_digital_write(SideArmRightPort, LOW);
+
+	if (autonSide == 1)
+	{
+		pros::lcd::set_text(1, "Selected Auton is Left");
+	}
+	if (autonSide == 2)
+	{
+		pros::lcd::set_text(1, "Selected Auton is Right");
+	}
+	if (autonSide == 3)
+	{
+		pros::lcd::set_text(1, "Selected Auton is Skills Left");
+	}
 }
 
 /**
@@ -92,7 +79,8 @@ class Autonomous
 	pros::Motor right_middle{RightMiddlePort};
 	pros::Motor right_back{RightBackPort};
 
-	pros::Motor lift_Front{frontlift, MOTOR_GEARSET_36, true}; // Pick correct gearset (36 is red)
+	pros::Motor FlyWheel1{fly_wheel1, MOTOR_GEARSET_36, true}; // Pick correct gearset (36 is red)
+	pros::Motor Intake{intake, MOTOR_GEARSET_36, true};		   // Pick correct gearset (36 is red)
 	pros::Vision vision_sensor{VisionPort, pros::E_VISION_ZERO_CENTER};
 
 	int getLeftPos()
@@ -109,22 +97,32 @@ class Autonomous
 	{
 		return (getLeftPos() + getRightPos()) / 2;
 	}
-	void Move(int ticks, int Lspeed, int Rspeed, bool FLiftOn, int FTicks, int FSpeed)
+
+	int getFlywheelPos()
+	{
+		return (FlyWheel1.get_position() + Intake.get_position()) / 2;
+	}
+	void Move(int ticks, int Lspeed, int Rspeed, bool intakeON, int intakeTicks, int intakeSpeed)
 	{
 		int startPos = getPos();
-		int LiftstartPos = lift_Front.get_position();
+		int flywheelStartPos = getLeftPos();
 		left_front.move(Lspeed * 127 / 200);
 		left_middle.move(Lspeed * 127 / 200);
 		left_back.move(Lspeed * 127 / 200);
 		right_front.move(Rspeed * 127 / 200);
 		right_middle.move(Rspeed * 127 / 200);
 		right_back.move(-Rspeed * 127 / 200);
-		lift_Front.move(FSpeed);
+		if (intakeON)
+		{
+			FlyWheel1.move(intakeSpeed);
+			Intake.move(intakeSpeed);
+		}
 		while (abs(getPos() - startPos) < ticks)
 		{
-			if (abs(lift_Front.get_position() - LiftstartPos) == FTicks)
+			if (abs(getFlywheelPos() - flywheelStartPos) == intakeTicks && intakeON)
 			{
-				lift_Front.move(0);
+				Intake.move(0);
+				FlyWheel1.move(0);
 			}
 			pros::c::delay(10);
 		}
@@ -134,8 +132,26 @@ class Autonomous
 		right_front.move(0);
 		right_middle.move(0);
 		right_back.move(0);
+		if (intakeON)
+		{
+			FlyWheel1.move(0);
+			Intake.move(0);
+		}
+		pros::c::delay(100);
+	}
 
-		lift_Front.move(0);
+	void flyWheelMove(int FlyWheelTicks, int FSpeed)
+	{
+		FlyWheel1.move(FSpeed);
+		int flyWheelStartPos = getFlywheelPos();
+		FlyWheel1.move(FSpeed);
+		Intake.move(FSpeed);
+		while (abs(getFlywheelPos() - flyWheelStartPos) < FlyWheelTicks)
+		{
+			pros::c::delay(10);
+		}
+		FlyWheel1.move(0);
+		Intake.move(0);
 		pros::c::delay(100);
 	}
 
@@ -149,7 +165,8 @@ class Autonomous
 		right_middle.move_relative((degrees / 360) * -3525, speed);
 		right_back.move_relative((degrees / 360) * 3525, speed);
 	}
-	void MoveVisionAssisted(int ticks, int speed) {
+	void MoveVisionAssisted(int ticks, int speed)
+	{
 		int startPos = getPos();
 		int timer = 350;
 
@@ -202,184 +219,311 @@ class Autonomous
 			right_middle.move(0);
 			right_back.move(0);
 		}
-		}
-
-	public:
-		void run()
-		{
-			pros::vision_signature_s_t sig1 = pros::c::vision_signature_from_utility(1, -2123, -1397, -1760, 8387, 10923, 9654, 3.100, 0);
-			pros::vision_signature_s_t sig2 = pros::c::vision_signature_from_utility(2, 8257, 10627, 9442, -863, -373, -618, 2.000, 0);
-			vision_sensor.set_signature(1, &sig1);
-			vision_sensor.set_signature(2, &sig2);
-
-			if (autonSide == 1)
-			{
-				// lift_Front.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-				// lift_Back.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-				pros::c::adi_pin_mode(ConveyorPort, OUTPUT);
-				pros::c::adi_digital_write(ConveyorPort, HIGH);
-				pros::c::adi_pin_mode(SideArmLeftPort, OUTPUT);
-				pros::c::adi_digital_write(SideArmLeftPort, LOW);
-				pros::c::adi_pin_mode(SideArmRightPort, OUTPUT);
-				pros::c::adi_digital_write(SideArmRightPort, LOW);
-			}
-		}
-	};
-
-	/**
-	 * Runs the user autonomous code. This function will be started in its own task
-	 * with the default priority and stack size whenever the robot is enabled via
-	 * the Field Management System or the VEX Competition Switch in the autonomous
-	 * mode. Alternatively, this function may be called in initialize or opcontrol
-	 * for non-competition testing purposes.
-	 *
-	 * If the robot is disabled or communications is lost, the autonomous task
-	 * will be stopped. Re-enabling the robot will restart the task, not re-start it
-	 * from where it left off.
-	 */
-	void autonomous()
-	{
-		Autonomous self_drive;
-		self_drive.run();
 	}
 
-	/**
-	 * Runs the operator control code. This function will be started in its own task
-	 * with the default priority and stack size whenever the robot is enabled via
-	 * the Field Management System or the VEX Competition Switch in the operator
-	 * control mode.
-	 *
-	 * If no competition control is connected, this function will run immediately
-	 * following initialize().
-	 *
-	 * If the robot is disabled or communications is lost, the
-	 * operator control task will be stopped. Re-enabling the robot will restart the
-	 * task, not resume it from where it left off.
-	 */
-
-	void opcontrol()
+public:
+	void run()
 	{
-		pros::Controller master(CONTROLLER_MASTER);
-		pros::Optical optical_sensor(opticalPort);
-		pros::c::optical_rgb_s_t rgb_value;
+		pros::vision_signature_s_t sig1 = pros::c::vision_signature_from_utility(1, -2123, -1397, -1760, 8387, 10923, 9654, 3.100, 0);
+		pros::vision_signature_s_t sig2 = pros::c::vision_signature_from_utility(2, 8257, 10627, 9442, -863, -373, -618, 2.000, 0);
+		vision_sensor.set_signature(1, &sig1);
+		vision_sensor.set_signature(2, &sig2);
+		pros::c::adi_pin_mode(ShootPort, OUTPUT);
+		pros::c::adi_digital_write(ShootPort, LOW); // write LOW to port 1 (solenoid may be extended or not, depending on wiring)
+		/*pros::c::adi_pin_mode(expansionPort, OUTPUT);
+	pros::c::adi_digital_write(expansionPort, LOW);*/
 
-		pros::Motor left_front(LeftFrontPort);
-		pros::Motor left_middle(LeftMiddlePort, true);
-		pros::Motor left_back(LeftBackPort);
-
-		pros::Motor right_front(RightFrontPort, true);
-		pros::Motor right_middle(RightMiddlePort);
-		pros::Motor right_back(RightBackPort);
-
-		pros::Motor lift_Front(frontlift, MOTOR_GEARSET_36, true); // Pick correct gearset (36 is red)
-		pros::Motor lift_Back(backlift, MOTOR_GEARSET_36, true);
-
-		pros::c::adi_pin_mode(ConveyorPort, OUTPUT);
-		pros::c::adi_digital_write(ConveyorPort, HIGH); // write LOW to port 1 (solenoid may be extended or not, depending on wiring)
-
-		pros::c::adi_pin_mode(SideArmLeftPort, OUTPUT);
-		pros::c::adi_digital_write(SideArmLeftPort, LOW);
-		pros::c::adi_pin_mode(SideArmRightPort, OUTPUT);
-		pros::c::adi_digital_write(SideArmRightPort, LOW);
-		bool SideArmsDown = false;
-
-		bool ConveyorOn = false;
-		int dead_Zone = 10; // the deadzone for the joysticks
-
-		while (true)
+		if (autonSide == 1)
 		{
-			/*if (pros::lcd::read_buttons() == 4)
-			{
-				autonSide = 1;
-			}
-			else if (pros::lcd::read_buttons() == 2)
-			{
-				autonSide = 2;
-			}
-			if (autonSide == 1)
-			{
-				pros::lcd::set_text(1, "Selected Auton is Right");
-			}
-			if (autonSide == 2)
-			{
-				pros::lcd::set_text(1, "Selected Auton is Left");
-			}*/
+			pros::c::adi_pin_mode(ShootPort, OUTPUT);
+			pros::c::adi_digital_write(ShootPort, LOW);
+			FlyWheel1.move_velocity(90);
+			Intake.move_velocity(90);
+			pros::c::delay(250);
+			Move(175, -70, -70, false, 0, 0);
+			/*pros::c::delay(100);
+			flyWheelMove(1200, 100);*/
+			pros::c::delay(50);
+			Move(100, 100, 100, false, 0, 0);
+			pros::c::delay(50);
+			Turn(-9, 100);
+			pros::c::delay(200);
+			FlyWheel1.move_velocity(-87);
+			Intake.move_velocity(-87);
+			pros::c::delay(3000);
+			pros::c::adi_digital_write(ShootPort, HIGH);
+			pros::c::delay(400);
+			pros::c::adi_digital_write(ShootPort, LOW);
+			pros::c::delay(3000);
+			FlyWheel1.move_velocity(-94);
+			Intake.move_velocity(-94);
+			pros::c::adi_digital_write(ShootPort, HIGH);
+			pros::c::delay(400);
+			pros::c::adi_digital_write(ShootPort, LOW);
+			pros::c::delay(400);
+			FlyWheel1.move_velocity(0);
+			Intake.move_velocity(0);
+		}
+		else if (autonSide == 2)
+		{
+			pros::c::adi_pin_mode(ShootPort, OUTPUT);
+			pros::c::adi_digital_write(ShootPort, LOW);
+			Move(700, 100, 100, false, 0, 0);
+			pros::c::delay(250);
+			Turn(-90, 100);
+			pros::c::delay(250);
+			FlyWheel1.move_velocity(90);
+			Intake.move_velocity(90);
+			pros::c::delay(250);
+			Move(175, -70, -70, false, 0, 0);
+			/*pros::c::delay(100);
+			flyWheelMove(1200, 100);*/
+			pros::c::delay(50);
+			Move(100, 100, 100, false, 0, 0);
+			pros::c::delay(50);
+			Turn(1, 100);
+			pros::c::delay(200);
+			FlyWheel1.move_velocity(-87);
+			Intake.move_velocity(-87);
+			pros::c::delay(3000);
+			pros::c::adi_digital_write(ShootPort, HIGH);
+			pros::c::delay(400);
+			pros::c::adi_digital_write(ShootPort, LOW);
+			pros::c::delay(3000);
+			FlyWheel1.move_velocity(-94);
+			Intake.move_velocity(-94);
+			pros::c::adi_digital_write(ShootPort, HIGH);
+			pros::c::delay(400);
+			pros::c::adi_digital_write(ShootPort, LOW);
+			pros::c::delay(400);
+			FlyWheel1.move_velocity(0);
+			Intake.move_velocity(0);
+		}
+		else if (autonSide == 3) // skills auto
+		{
+			pros::c::adi_pin_mode(ShootPort, OUTPUT);
+			pros::c::adi_digital_write(ShootPort, LOW);
+			FlyWheel1.move_velocity(90);
+			Intake.move_velocity(90);
+			pros::c::delay(250);
+			Move(250, -70, -70, false, 0, 0);
+			/*pros::c::delay(100);
+			flyWheelMove(1200, 100);*/
+			pros::c::delay(50);
+			Move(100, 100, 100, false, 0, 0);
+			pros::c::delay(50);
+			Turn(-9, 100);
+			pros::c::delay(200);
+			FlyWheel1.move_velocity(-87);
+			Intake.move_velocity(-87);
+			pros::c::delay(3000);
+			pros::c::adi_digital_write(ShootPort, HIGH);
+			pros::c::delay(400);
+			pros::c::adi_digital_write(ShootPort, LOW);
+			pros::c::delay(3000);
+			FlyWheel1.move_velocity(-94);
+			Intake.move_velocity(-94);
+			pros::c::adi_digital_write(ShootPort, HIGH);
+			pros::c::delay(400);
+			pros::c::adi_digital_write(ShootPort, LOW);
+			pros::c::delay(400);
+			FlyWheel1.move_velocity(0);
+			Intake.move_velocity(0);
+		}
+	}
+};
 
-			int leftSpeed = 0;
-			int rightSpeed = 0;
-			int analogY = master.get_analog(ANALOG_LEFT_Y);
-			int analogX = master.get_analog(ANALOG_RIGHT_X);
+/**
+ * Runs the user autonomous code. This function will be started in its own task
+ * with the default priority and stack size whenever the robot is enabled via
+ * the Field Management System or the VEX Competition Switch in the autonomous
+ * mode. Alternatively, this function may be called in initialize or opcontrol
+ * for non-competition testing purposes.
+ *
+ * If the robot is disabled or communications is lost, the autonomous task
+ * will be stopped. Re-enabling the robot will restart the task, not re-start it
+ * from where it left off.
+ */
+void autonomous()
+{
+	Autonomous self_drive;
+	self_drive.run();
+}
 
-			if (analogY == 0 && abs(analogX) > dead_Zone)
-			{
-				leftSpeed = analogX;
-				rightSpeed = -analogX;
-			}
-			else if (analogX >= dead_Zone && analogY > dead_Zone)
-			{
-				leftSpeed = analogY;
-				rightSpeed = analogY - analogX;
-			}
-			else if (analogX < -dead_Zone && analogY > dead_Zone)
-			{
-				leftSpeed = analogY + analogX;
-				rightSpeed = analogY;
-			}
-			else if (analogX >= dead_Zone && analogY < -dead_Zone)
-			{
-				leftSpeed = analogY;
-				rightSpeed = analogY + analogX;
-			}
-			else if (analogX < -dead_Zone && analogY < -dead_Zone)
-			{
-				leftSpeed = analogY - analogX;
-				rightSpeed = analogY;
-			}
-			else if (analogX == 0 && abs(analogY) > dead_Zone)
-			{
-				leftSpeed = analogY;
-				rightSpeed = analogY;
-			}
+/**
+ * Runs the operator control code. This function will be started in its own task
+ * with the default priority and stack size whenever the robot is enabled via
+ * the Field Management System or the VEX Competition Switch in the operator
+ * control mode.
+ *
+ * If no competition control is connected, this function will run immediately
+ * following initialize().
+ *
+ * If the robot is disabled or communications is lost, the
+ * operator control task will be stopped. Re-enabling the robot will restart the
+ * task, not resume it from where it left off.
+ */
 
-			rgb_value = optical_sensor.get_rgb(); 
-			//if (master.get_digital(DIGITAL_R1) && !rgb_value.blue && !rgb_value.blue)
-			if (master.get_digital(DIGITAL_R1))
+void opcontrol()
+{
+	pros::Controller master(CONTROLLER_MASTER);
+	pros::Optical optical_sensor(opticalPort);
+	pros::c::optical_rgb_s_t rgb_value;
+
+	pros::Motor left_front(LeftFrontPort);
+	pros::Motor left_middle(LeftMiddlePort, true);
+	pros::Motor left_back(LeftBackPort);
+
+	pros::Motor right_front(RightFrontPort, true);
+	pros::Motor right_middle(RightMiddlePort);
+	pros::Motor right_back(RightBackPort);
+
+	pros::Motor FlyWheel1(fly_wheel1, MOTOR_GEARSET_36, true); // Pick correct gearset (36 is red)
+	pros::Motor Intake(intake, MOTOR_GEARSET_36, true);		   // Pick correct gearset (36 is red)
+
+	pros::c::adi_pin_mode(ShootPort, OUTPUT);
+	pros::c::adi_digital_write(ShootPort, LOW); // write LOW to port 1 (solenoid may be extended or not, depending on wiring)
+	/*pros::c::adi_pin_mode(expansionPort, OUTPUT);
+	pros::c::adi_digital_write(expansionPort, LOW);*/
+	int dead_Zone = 10; // the deadzone for the joysticks
+	int defaultFlyWheelSpeed = -100;
+	int FlyWheelSpeed = defaultFlyWheelSpeed;
+	int FlyWheelOn = 0;
+
+	while (true)
+	{
+		if (pros::lcd::read_buttons() == 4)
+		{
+			autonSide = 1;
+		}
+		else if (pros::lcd::read_buttons() == 2)
+		{
+			autonSide = 2;
+		}
+		if (autonSide == 1)
+		{
+			pros::lcd::set_text(1, "Selected Auton is Left");
+		}
+		if (autonSide == 2)
+		{
+			pros::lcd::set_text(1, "Selected Auton is Right");
+		}
+		if (autonSide == 3)
+		{
+			pros::lcd::set_text(1, "Selected Auton is Skills Left");
+		}
+
+		int leftSpeed = 0;
+		int rightSpeed = 0;
+		int analogY = master.get_analog(ANALOG_LEFT_Y);
+		int analogX = master.get_analog(ANALOG_RIGHT_X);
+
+		if (analogY == 0 && abs(analogX) > dead_Zone)
+		{
+			leftSpeed = analogX;
+			rightSpeed = -analogX;
+		}
+		else if (analogX >= dead_Zone && analogY > dead_Zone)
+		{
+			leftSpeed = analogY;
+			rightSpeed = analogY - analogX;
+		}
+		else if (analogX < -dead_Zone && analogY > dead_Zone)
+		{
+			leftSpeed = analogY + analogX;
+			rightSpeed = analogY;
+		}
+		else if (analogX >= dead_Zone && analogY < -dead_Zone)
+		{
+			leftSpeed = analogY;
+			rightSpeed = analogY + analogX;
+		}
+		else if (analogX < -dead_Zone && analogY < -dead_Zone)
+		{
+			leftSpeed = analogY - analogX;
+			rightSpeed = analogY;
+		}
+		else if (analogX == 0 && abs(analogY) > dead_Zone)
+		{
+			leftSpeed = analogY;
+			rightSpeed = analogY;
+		}
+
+		rgb_value = optical_sensor.get_rgb();
+		// if (master.get_digital(DIGITAL_R1) && !rgb_value.blue && !rgb_value.blue)
+
+		if (master.get_digital_new_press(DIGITAL_A))
+		{
+			if (FlyWheelOn == 1)
 			{
-				lift_Front.move_velocity(100); // pick a velocity for the lifting
-				lift_Back.move_velocity(-100);
-			}
-			//else if (master.get_digital(DIGITAL_R2) && !rgb_value.blue && !rgb_value.blue)
-			else if (master.get_digital(DIGITAL_R2)) 
-			{
-				lift_Front.move_velocity(-100);
-				lift_Back.move_velocity(100);
+				FlyWheelOn = 0;
+				FlyWheel1.move_velocity(0);
+				Intake.move_velocity(0);
+				FlyWheelSpeed = defaultFlyWheelSpeed;
 			}
 			else
 			{
-				lift_Front.move_velocity(0);
-				lift_Back.move_velocity(0);
+				FlyWheel1.move_velocity(FlyWheelSpeed);
+				Intake.move_velocity(FlyWheelSpeed);
+				FlyWheelOn = 1;
 			}
-
-
-			if (master.get_digital(DIGITAL_B))
-			{
-				pros::c::adi_digital_write(ConveyorPort, LOW);
-			}
-
-
-			if (master.get_digital(DIGITAL_Y))
-			{
-				pros::c::adi_digital_write(ConveyorPort, HIGH);
-			}
-			
-			left_front.move(leftSpeed * 1.574);
-			left_middle.move(leftSpeed * 1.574);
-			left_back.move(leftSpeed * 1.574);
-
-			right_front.move(rightSpeed * 1.574);
-			right_middle.move(rightSpeed * 1.574);
-			right_back.move(rightSpeed * -1.574);
-
-			pros::delay(10);
 		}
+
+		if (master.get_digital_new_press(DIGITAL_Y))
+		{
+			if (FlyWheelOn == -1)
+			{
+				FlyWheelOn = 0;
+				FlyWheel1.move_velocity(0);
+				Intake.move_velocity(0);
+				FlyWheelSpeed = defaultFlyWheelSpeed;
+			}
+			else
+			{
+				FlyWheel1.move_velocity(-FlyWheelSpeed);
+				Intake.move_velocity(-FlyWheelSpeed);
+				FlyWheelOn = -1;
+			}
+		}
+
+		// X press changes flywheel speed to high (defualt setting)
+		if (master.get_digital_new_press(DIGITAL_X) && FlyWheelOn == 1)
+		{
+			FlyWheelSpeed = defaultFlyWheelSpeed;
+			FlyWheel1.move_velocity(FlyWheelSpeed);
+			Intake.move_velocity(FlyWheelSpeed);
+		}
+
+		// B press changes flywheel speed to low setting
+		if (master.get_digital_new_press(DIGITAL_B) && FlyWheelOn == 1)
+		{
+			FlyWheelSpeed = -65;
+			FlyWheel1.move_velocity(FlyWheelSpeed);
+			Intake.move_velocity(FlyWheelSpeed);
+		}
+
+		if (master.get_digital_new_press(DIGITAL_R2))
+		{
+			pros::c::adi_digital_write(ShootPort, HIGH);
+			pros::c::delay(250);
+		}
+		if (master.get_digital_new_press(DIGITAL_R2) == false)
+		{
+			pros::c::adi_digital_write(ShootPort, LOW);
+		}
+		/*if (master.get_digital_new_press(DIGITAL_L2))
+		{
+			pros::c::adi_digital_write(expansionPort, HIGH);
+			pros::c::delay(250);
+		}*/
+
+		left_front.move(leftSpeed * 1.574);
+		left_middle.move(leftSpeed * 1.574);
+		left_back.move(leftSpeed * 1.574);
+		right_front.move(rightSpeed * 1.574);
+		right_middle.move(rightSpeed * 1.574);
+		right_back.move(rightSpeed * -1.574);
+
+		pros::delay(10);
 	}
+}

@@ -71,19 +71,18 @@ void opcontrol(void);
 #endif
 
 #define LeftFrontPort 6
-#define LeftMiddlePort 7
+#define LeftMiddlePort 7 //change to port that works
 #define LeftBackPort 11
 
 #define RightFrontPort 19
 #define RightMiddlePort 16
 #define RightBackPort 20
 
-#define frontlift 8
-#define backlift 18
+#define fly_wheel1 18
+#define intake 8
 
-#define ConveyorPort 'A'
-#define SideArmLeftPort 'B'
-#define SideArmRightPort 'C'
+#define ShootPort 'A'
+#define expansionPort 'B'
 
 #define VisionPort 10
 #define RedSignature 1
