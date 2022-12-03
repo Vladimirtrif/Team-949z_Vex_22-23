@@ -281,19 +281,19 @@ public:
 			pros::c::delay(50);
 			Move(100, 100, 100, false, 0, 0);
 			pros::c::delay(50);
-			Turn(1, 100);
+			Turn(10, 100);
 			pros::c::delay(200);
 			FlyWheel1.move_velocity(-87);
 			Intake.move_velocity(-87);
-			pros::c::delay(3000);
+			pros::c::delay(4000);
 			pros::c::adi_digital_write(ShootPort, HIGH);
-			pros::c::delay(400);
+			pros::c::delay(500);
 			pros::c::adi_digital_write(ShootPort, LOW);
-			pros::c::delay(3000);
-			FlyWheel1.move_velocity(-94);
-			Intake.move_velocity(-94);
+			pros::c::delay(4000);
+			FlyWheel1.move_velocity(-93);
+			Intake.move_velocity(-93);
 			pros::c::adi_digital_write(ShootPort, HIGH);
-			pros::c::delay(400);
+			pros::c::delay(500);
 			pros::c::adi_digital_write(ShootPort, LOW);
 			pros::c::delay(400);
 			FlyWheel1.move_velocity(0);
@@ -301,34 +301,6 @@ public:
 		}
 		else if (autonSide == 3) // skills auto
 		{
-			pros::c::adi_pin_mode(ShootPort, OUTPUT);
-			pros::c::adi_digital_write(ShootPort, LOW);
-			FlyWheel1.move_velocity(90);
-			Intake.move_velocity(90);
-			pros::c::delay(250);
-			Move(250, -70, -70, false, 0, 0);
-			/*pros::c::delay(100);
-			flyWheelMove(1200, 100);*/
-			pros::c::delay(50);
-			Move(100, 100, 100, false, 0, 0);
-			pros::c::delay(50);
-			Turn(-9, 100);
-			pros::c::delay(200);
-			FlyWheel1.move_velocity(-87);
-			Intake.move_velocity(-87);
-			pros::c::delay(3000);
-			pros::c::adi_digital_write(ShootPort, HIGH);
-			pros::c::delay(400);
-			pros::c::adi_digital_write(ShootPort, LOW);
-			pros::c::delay(3000);
-			FlyWheel1.move_velocity(-94);
-			Intake.move_velocity(-94);
-			pros::c::adi_digital_write(ShootPort, HIGH);
-			pros::c::delay(400);
-			pros::c::adi_digital_write(ShootPort, LOW);
-			pros::c::delay(400);
-			FlyWheel1.move_velocity(0);
-			Intake.move_velocity(0);
 		}
 	}
 };
