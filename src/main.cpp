@@ -268,7 +268,7 @@ public:
 		{
 			pros::c::adi_pin_mode(ShootPort, OUTPUT);
 			pros::c::adi_digital_write(ShootPort, LOW);
-			Move(700, 100, 100, false, 0, 0);
+			Move(500, 100, 100, false, 0, 0);
 			pros::c::delay(250);
 			Turn(-90, 100);
 			pros::c::delay(250);
@@ -276,8 +276,6 @@ public:
 			Intake.move_velocity(90);
 			pros::c::delay(250);
 			Move(175, -70, -70, false, 0, 0);
-			/*pros::c::delay(100);
-			flyWheelMove(1200, 100);*/
 			pros::c::delay(50);
 			Move(100, 100, 100, false, 0, 0);
 			pros::c::delay(50);
