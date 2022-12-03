@@ -381,7 +381,7 @@ void opcontrol()
 	pros::c::adi_digital_write(expansionPort, LOW);*/
 	int dead_Zone = 10; // the deadzone for the joysticks
 	int defaultFlyWheelSpeed = -65;
-	int FlyWheelSpeed = 0;
+	int FlyWheelSpeed = defaultFlyWheelSpeed;
 	int FlyWheelOn = 0;
 
 	while (true)
