@@ -358,8 +358,8 @@ void opcontrol()
 	/*pros::c::adi_pin_mode(expansionPort, OUTPUT);
 	pros::c::adi_digital_write(expansionPort, LOW);*/
 	int dead_Zone = 10; // the deadzone for the joysticks
-	int defaultFlyWheelSpeed = -100;
-	int FlyWheelSpeed = defaultFlyWheelSpeed;
+	int defaultFlyWheelSpeed = -65;
+	int FlyWheelSpeed = 0;
 	int FlyWheelOn = 0;
 
 	while (true)
@@ -426,53 +426,29 @@ void opcontrol()
 
 		if (master.get_digital_new_press(DIGITAL_A))
 		{
-			if (FlyWheelOn == 1)
-			{
-				FlyWheelOn = 0;
-				FlyWheel1.move_velocity(0);
-				Intake.move_velocity(0);
-				FlyWheelSpeed = defaultFlyWheelSpeed;
-			}
-			else
-			{
-				FlyWheel1.move_velocity(FlyWheelSpeed);
-				Intake.move_velocity(FlyWheelSpeed);
-				FlyWheelOn = 1;
-			}
+			FlyWheelSpeed = defaultFlyWheelSpeed;
 		}
 
 		if (master.get_digital_new_press(DIGITAL_Y))
 		{
-			if (FlyWheelOn == -1)
-			{
-				FlyWheelOn = 0;
-				FlyWheel1.move_velocity(0);
-				Intake.move_velocity(0);
-				FlyWheelSpeed = defaultFlyWheelSpeed;
-			}
-			else
-			{
-				FlyWheel1.move_velocity(-FlyWheelSpeed);
-				Intake.move_velocity(-FlyWheelSpeed);
-				FlyWheelOn = -1;
-			}
+				FlyWheelSpeed = -defaultFlyWheelSpeed;
 		}
 
 		// X press changes flywheel speed to high (defualt setting)
-		if (master.get_digital_new_press(DIGITAL_X) && FlyWheelOn == 1)
+		if (master.get_digital_new_press(DIGITAL_B))
 		{
-			FlyWheelSpeed = defaultFlyWheelSpeed;
+			FlyWheelSpeed = 0;
 			FlyWheel1.move_velocity(FlyWheelSpeed);
 			Intake.move_velocity(FlyWheelSpeed);
 		}
 
 		// B press changes flywheel speed to low setting
-		if (master.get_digital_new_press(DIGITAL_B) && FlyWheelOn == 1)
+		if (master.get_digital_new_press(DIGITAL_X))
 		{
-			FlyWheelSpeed = -65;
-			FlyWheel1.move_velocity(FlyWheelSpeed);
-			Intake.move_velocity(FlyWheelSpeed);
+			FlyWheelSpeed = -100;
 		}
+		FlyWheel1.move_velocity(FlyWheelSpeed);
+			Intake.move_velocity(FlyWheelSpeed);
 
 		if (master.get_digital_new_press(DIGITAL_R2))
 		{
