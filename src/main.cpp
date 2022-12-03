@@ -44,7 +44,7 @@ void initialize()
 	}
 	if (autonSide == 3)
 	{
-		pros::lcd::set_text(1, "Selected Auton is Skills Left");
+		pros::lcd::set_text(1, "Selected Auton is Skills");
 	}
 }
 
@@ -304,7 +304,7 @@ public:
 			FlyWheel1.move_velocity(90);
 			Intake.move_velocity(90);
 			pros::c::delay(250);
-			Move(250, -70, -70, false, 0, 0);
+			Move(175, -70, -70, false, 0, 0);
 			pros::c::delay(50);
 			Move(100, 100, 100, false, 0, 0);
 			pros::c::delay(50);
@@ -388,6 +388,7 @@ void opcontrol()
 	int defaultFlyWheelSpeed = -65;
 	int FlyWheelSpeed = defaultFlyWheelSpeed;
 	int FlyWheelOn = 0;
+	autonSide = 1;
 
 	while (true)
 	{
@@ -413,7 +414,7 @@ void opcontrol()
 		}
 		if (autonSide == 3)
 		{
-			pros::lcd::set_text(1, "Selected Auton is Skills Left");
+			pros::lcd::set_text(1, "Selected Auton is Skills Skills");
 		}
 
 		int leftSpeed = 0;
@@ -496,6 +497,7 @@ void opcontrol()
 			pros::c::adi_digital_write(expansionPort, HIGH);
 			pros::c::delay(500);
 		}
+
 
 		if (abs(leftSpeed) < 40 && abs(rightSpeed) < 40)
 		{
