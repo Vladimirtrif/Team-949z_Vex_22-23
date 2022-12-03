@@ -232,6 +232,8 @@ public:
 		pros::c::adi_digital_write(ShootPort, LOW); // write LOW to port 1 (solenoid may be extended or not, depending on wiring)
 		pros::c::adi_pin_mode(expansionPort, OUTPUT);
 		pros::c::adi_digital_write(expansionPort, LOW);
+		pros::c::adi_pin_mode(expansionPort2, OUTPUT);
+		pros::c::adi_digital_write(expansionPort2, LOW);
 		/*pros::c::adi_pin_mode(expansionPort, OUTPUT);
 	pros::c::adi_digital_write(expansionPort, LOW);*/
 
@@ -279,7 +281,7 @@ public:
 			pros::c::delay(50);
 			Move(100, 100, 100, false, 0, 0);
 			pros::c::delay(50);
-			Turn(10, 100);
+			Turn(5, 100);
 			pros::c::delay(200);
 			FlyWheel1.move_velocity(-87);
 			Intake.move_velocity(-87);
@@ -301,6 +303,10 @@ public:
 		{
 			pros::c::adi_pin_mode(ShootPort, OUTPUT);
 			pros::c::adi_digital_write(ShootPort, LOW);
+			pros::c::adi_pin_mode(expansionPort, OUTPUT);
+		pros::c::adi_digital_write(expansionPort, LOW);
+		pros::c::adi_pin_mode(expansionPort2, OUTPUT);
+		pros::c::adi_digital_write(expansionPort2, LOW);
 			FlyWheel1.move_velocity(90);
 			Intake.move_velocity(90);
 			pros::c::delay(250);
@@ -325,6 +331,10 @@ public:
 			pros::c::delay(400);
 			FlyWheel1.move_velocity(0);
 			Intake.move_velocity(0);
+			/*Turn(90, 100);
+			pros::c::delay(45000);
+			pros::c::adi_digital_write(expansionPort2, HIGH);
+			pros::c::adi_digital_write(expansionPort, HIGH);*/
 		}
 	}
 };
@@ -382,8 +392,9 @@ void opcontrol()
 
 	pros::c::adi_pin_mode(expansionPort, OUTPUT);
 	pros::c::adi_digital_write(expansionPort, LOW);
-	/*pros::c::adi_pin_mode(expansionPort, OUTPUT);
-	pros::c::adi_digital_write(expansionPort, LOW);*/
+	pros::c::adi_pin_mode(expansionPort2, OUTPUT);
+	pros::c::adi_digital_write(expansionPort2, LOW);
+
 	int dead_Zone = 10; // the deadzone for the joysticks
 	int defaultFlyWheelSpeed = -65;
 	int FlyWheelSpeed = defaultFlyWheelSpeed;
@@ -400,7 +411,7 @@ void opcontrol()
 		{
 			autonSide = 2;
 		}
-		else if (pros::lcd::read_buttons() == 6)
+		else if (pros::lcd::read_buttons() == 1)
 		{
 			autonSide = 3;
 		}
@@ -495,6 +506,7 @@ void opcontrol()
 		if (master.get_digital(DIGITAL_L1) && master.get_digital(DIGITAL_R1))
 		{
 			pros::c::adi_digital_write(expansionPort, HIGH);
+			pros::c::adi_digital_write(expansionPort2, HIGH);
 			pros::c::delay(500);
 		}
 
