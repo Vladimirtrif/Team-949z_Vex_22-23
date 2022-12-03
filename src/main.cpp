@@ -298,6 +298,7 @@ public:
 			pros::c::delay(400);
 			FlyWheel1.move_velocity(0);
 			Intake.move_velocity(0);
+			
 		}
 		else if (autonSide == 3) // skills auto
 		{
