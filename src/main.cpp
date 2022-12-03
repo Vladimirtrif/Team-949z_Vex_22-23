@@ -294,7 +294,6 @@ public:
 			pros::c::delay(400);
 			FlyWheel1.move_velocity(0);
 			Intake.move_velocity(0);
-			
 		}
 		else if (autonSide == 3) // skills auto
 		{
@@ -395,7 +394,8 @@ void opcontrol()
 		{
 			autonSide = 2;
 		}
-		else if(pros::lcd::read_buttons() == 6) {
+		else if (pros::lcd::read_buttons() == 6)
+		{
 			autonSide = 3;
 		}
 		if (autonSide == 1)
@@ -457,7 +457,7 @@ void opcontrol()
 
 		if (master.get_digital_new_press(DIGITAL_Y))
 		{
-				FlyWheelSpeed = -defaultFlyWheelSpeed;
+			FlyWheelSpeed = -defaultFlyWheelSpeed;
 		}
 
 		// X press changes flywheel speed to high (defualt setting)
@@ -474,7 +474,7 @@ void opcontrol()
 			FlyWheelSpeed = -100;
 		}
 		FlyWheel1.move_velocity(FlyWheelSpeed);
-			Intake.move_velocity(FlyWheelSpeed);
+		Intake.move_velocity(FlyWheelSpeed);
 
 		if (master.get_digital_new_press(DIGITAL_R2))
 		{
@@ -491,12 +491,24 @@ void opcontrol()
 			pros::c::delay(250);
 		}*/
 
-		left_front.move(leftSpeed * 1.574);
-		left_middle.move(leftSpeed * 1.574);
-		left_back.move(leftSpeed * 1.574);
-		right_front.move(rightSpeed * 1.574);
-		right_middle.move(rightSpeed * 1.574);
-		right_back.move(rightSpeed * -1.574);
+		if (abs(leftSpeed) < 40 && abs(rightSpeed) < 40)
+		{
+			left_front.move(leftSpeed);
+			left_middle.move(leftSpeed);
+			left_back.move(leftSpeed);
+			right_front.move(rightSpeed);
+			right_middle.move(rightSpeed);
+			right_back.move(-rightSpeed);
+		}
+		else
+		{
+			left_front.move(leftSpeed * 1.574);
+			left_middle.move(leftSpeed * 1.574);
+			left_back.move(leftSpeed * 1.574);
+			right_front.move(rightSpeed * 1.574);
+			right_middle.move(rightSpeed * 1.574);
+			right_back.move(rightSpeed * -1.574);
+		}
 
 		pros::delay(10);
 	}
