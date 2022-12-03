@@ -82,7 +82,7 @@ void opcontrol(void);
 #define intake 8
 
 #define ShootPort 'A'
-//#define expansionPort 
+#define expansionPort 'B'
 
 #define VisionPort 10
 #define RedSignature 1

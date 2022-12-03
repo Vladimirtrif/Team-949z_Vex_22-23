@@ -230,6 +230,8 @@ public:
 		vision_sensor.set_signature(2, &sig2);
 		pros::c::adi_pin_mode(ShootPort, OUTPUT);
 		pros::c::adi_digital_write(ShootPort, LOW); // write LOW to port 1 (solenoid may be extended or not, depending on wiring)
+		pros::c::adi_pin_mode(expansionPort, OUTPUT);
+		pros::c::adi_digital_write(expansionPort, LOW);
 		/*pros::c::adi_pin_mode(expansionPort, OUTPUT);
 	pros::c::adi_digital_write(expansionPort, LOW);*/
 
@@ -373,10 +375,13 @@ void opcontrol()
 	pros::Motor right_back(RightBackPort);
 
 	pros::Motor FlyWheel1(fly_wheel1, MOTOR_GEARSET_36, true); // Pick correct gearset (36 is red)
-	pros::Motor Intake(intake, MOTOR_GEARSET_36, true);		   // Pick correct gearset (36 is red)
+	pros::Motor Intake(intake, MOTOR_GEARSET_36, true);		   // Pick correct gearset (36 is red
 
 	pros::c::adi_pin_mode(ShootPort, OUTPUT);
 	pros::c::adi_digital_write(ShootPort, LOW); // write LOW to port 1 (solenoid may be extended or not, depending on wiring)
+
+	pros::c::adi_pin_mode(expansionPort, OUTPUT);
+	pros::c::adi_digital_write(expansionPort, LOW);
 	/*pros::c::adi_pin_mode(expansionPort, OUTPUT);
 	pros::c::adi_digital_write(expansionPort, LOW);*/
 	int dead_Zone = 10; // the deadzone for the joysticks
@@ -485,9 +490,11 @@ void opcontrol()
 		{
 			pros::c::adi_digital_write(ShootPort, LOW);
 		}
-		if (master.get_digital_new_press(DIGITAL_DOWN))
+
+		if (master.get_digital(DIGITAL_L1) && master.get_digital(DIGITAL_R1))
 		{
-			//release end game
+			pros::c::adi_digital_write(expansionPort, HIGH);
+			pros::c::delay(500);
 		}
 
 		if (abs(leftSpeed) < 40 && abs(rightSpeed) < 40)
