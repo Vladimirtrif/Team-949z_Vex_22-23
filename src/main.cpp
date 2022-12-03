@@ -485,11 +485,10 @@ void opcontrol()
 		{
 			pros::c::adi_digital_write(ShootPort, LOW);
 		}
-		/*if (master.get_digital_new_press(DIGITAL_L2))
+		if (master.get_digital_new_press(DIGITAL_DOWN))
 		{
-			pros::c::adi_digital_write(expansionPort, HIGH);
-			pros::c::delay(250);
-		}*/
+			//release end game
+		}
 
 		if (abs(leftSpeed) < 40 && abs(rightSpeed) < 40)
 		{
