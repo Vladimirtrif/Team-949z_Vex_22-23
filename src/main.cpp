@@ -229,13 +229,11 @@ public:
 		vision_sensor.set_signature(1, &sig1);
 		vision_sensor.set_signature(2, &sig2);
 		pros::c::adi_pin_mode(ShootPort, OUTPUT);
-		pros::c::adi_digital_write(ShootPort, LOW); // write LOW to port 1 (solenoid may be extended or not, depending on wiring)
+		pros::c::adi_digital_write(ShootPort, LOW);
 		pros::c::adi_pin_mode(expansionPort, OUTPUT);
 		pros::c::adi_digital_write(expansionPort, LOW);
 		pros::c::adi_pin_mode(expansionPort2, OUTPUT);
 		pros::c::adi_digital_write(expansionPort2, LOW);
-		/*pros::c::adi_pin_mode(expansionPort, OUTPUT);
-	pros::c::adi_digital_write(expansionPort, LOW);*/
 
 		if (autonSide == 1)
 		{
@@ -301,7 +299,7 @@ public:
 		}
 		else if (autonSide == 3) // skills auto
 		{
-			/*
+			
 			pros::c::adi_pin_mode(ShootPort, OUTPUT);
 			pros::c::adi_digital_write(ShootPort, LOW);
 			pros::c::adi_pin_mode(expansionPort, OUTPUT);
@@ -335,35 +333,7 @@ public:
 			Turn(30, 100);
 			pros::c::delay(750);
 			pros::c::adi_digital_write(expansionPort2, HIGH);
-			pros::c::adi_digital_write(expansionPort, HIGH);*/
-			
-			pros::c::adi_pin_mode(ShootPort, OUTPUT);
-			pros::c::adi_digital_write(ShootPort, LOW);
-			FlyWheel1.move_velocity(90);
-			Intake.move_velocity(90);
-			pros::c::delay(250);
-			Move(175, -70, -70, false, 0, 0);
-			pros::c::delay(50);
-			Move(100, 100, 100, false, 0, 0);
-			pros::c::delay(50);
-			Turn(-9, 100);
-			pros::c::delay(200);
-			FlyWheel1.move_velocity(-87);
-			Intake.move_velocity(-87);
-			pros::c::delay(3000);
-			pros::c::adi_digital_write(ShootPort, HIGH);
-			pros::c::delay(400);
-			pros::c::adi_digital_write(ShootPort, LOW);
-			pros::c::delay(3000);
-			FlyWheel1.move_velocity(-94);
-			Intake.move_velocity(-94);
-			pros::c::adi_digital_write(ShootPort, HIGH);
-			pros::c::delay(400);
-			pros::c::adi_digital_write(ShootPort, LOW);
-			pros::c::delay(400);
-			FlyWheel1.move_velocity(0);
-			Intake.move_velocity(0);
-			
+			pros::c::adi_digital_write(expansionPort, HIGH);
 			
 		}
 	}
@@ -429,7 +399,6 @@ void opcontrol()
 	int defaultFlyWheelSpeed = -65;
 	int FlyWheelSpeed = defaultFlyWheelSpeed;
 	int FlyWheelOn = 0;
-	autonSide = 1;
 
 	while (true)
 	{
