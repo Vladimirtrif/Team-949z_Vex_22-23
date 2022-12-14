@@ -1,11 +1,16 @@
 #include "main.h"
 #include "pros/adi.h"
-#include "pros/api_legacy.h"
 #include "pros/llemu.hpp"
-#include "pros/vision.hpp"
-#include "pros/vision.h"
-#include "pros/optical.h"
-#include "pros/optical.hpp"
+
+// #define VISION_ENABLED
+#ifdef VISION_ENABLED
+#  include "pros/vision.hpp"
+#endif
+
+// #define OPTICAL_ENABLED
+#ifdef OPTICAL_ENABLED
+#  include "pros/optical.hpp"
+#endif
 
 /*
  * Presence of these two variables here replaces _pros_ld_timestamp step in common.mk.
@@ -81,7 +86,9 @@ class Autonomous
 
 	pros::Motor FlyWheel1{fly_wheel1, MOTOR_GEARSET_36, true}; // Pick correct gearset (36 is red)
 	pros::Motor Intake{intake, MOTOR_GEARSET_36, true};		   // Pick correct gearset (36 is red)
+#ifdef VISION_ENABLED
 	pros::Vision vision_sensor{VisionPort, pros::E_VISION_ZERO_CENTER};
+#endif
 
 	int getLeftPos()
 	{
@@ -165,6 +172,8 @@ class Autonomous
 		right_middle.move_relative((degrees / 360) * -3525, speed);
 		right_back.move_relative((degrees / 360) * 3525, speed);
 	}
+
+#ifdef VISION_ENABLED
 	void MoveVisionAssisted(int ticks, int speed)
 	{
 		int startPos = getPos();
@@ -220,14 +229,17 @@ class Autonomous
 			right_back.move(0);
 		}
 	}
+#endif
 
 public:
 	void run()
 	{
+#ifdef OPTICAL_ENABLED
 		pros::vision_signature_s_t sig1 = pros::c::vision_signature_from_utility(1, -2123, -1397, -1760, 8387, 10923, 9654, 3.100, 0);
 		pros::vision_signature_s_t sig2 = pros::c::vision_signature_from_utility(2, 8257, 10627, 9442, -863, -373, -618, 2.000, 0);
 		vision_sensor.set_signature(1, &sig1);
 		vision_sensor.set_signature(2, &sig2);
+#endif
 		pros::c::adi_pin_mode(ShootPort, OUTPUT);
 		pros::c::adi_digital_write(ShootPort, LOW);
 		pros::c::adi_pin_mode(expansionPort, OUTPUT);
@@ -376,8 +388,9 @@ void autonomous()
 void opcontrol()
 {
 	pros::Controller master(CONTROLLER_MASTER);
+#ifdef OPTICAL_ENABLED
 	pros::Optical optical_sensor(opticalPort);
-	pros::c::optical_rgb_s_t rgb_value;
+#endif
 
 	pros::Motor left_front(LeftFrontPort);
 	pros::Motor left_middle(LeftMiddlePort, true);
@@ -466,8 +479,10 @@ void opcontrol()
 			rightSpeed = analogY;
 		}
 
-		rgb_value = optical_sensor.get_rgb();
-		// if (master.get_digital(DIGITAL_R1) && !rgb_value.blue && !rgb_value.blue)
+#ifdef OPTICAL_ENABLED
+		auto rgb_value = optical_sensor.get_rgb();
+		if (master.get_digital(DIGITAL_R1) && !rgb_value.blue && !rgb_value.blue)
+#endif 
 
 		if (master.get_digital_new_press(DIGITAL_A))
 		{
