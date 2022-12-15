@@ -33,7 +33,7 @@ enum AutonMode {
 	AutonSkills = 3,
 };
 
-AutonMode autonSide = AutonLeft;
+AutonMode autonSide = AutonRight;
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -137,8 +137,9 @@ private:
 		return (FlyWheel1.get_position() + Intake.get_position()) / 2;
 	}
 
-	void Move(int ticks, int Lspeed, int Rspeed, bool intakeON, int intakeTicks, int intakeSpeed)
+	void Move(int ticks, int Lspeed, int Rspeed, bool intakeON, int intakeTicks, int intakeSpeed, int timeOut)
 	{
+		int counter = 0;
 		int startPos = getPos();
 		int flywheelStartPos = getLeftPos();
 		left_front.move(Lspeed * 127 / 200);
@@ -152,7 +153,7 @@ private:
 			FlyWheel1.move(intakeSpeed);
 			Intake.move(intakeSpeed);
 		}
-		while (abs(getPos() - startPos) < ticks)
+		while (abs(getPos() - startPos) < ticks && counter <= timeOut)
 		{
 			if (abs(getFlywheelPos() - flywheelStartPos) == intakeTicks && intakeON)
 			{
@@ -160,6 +161,7 @@ private:
 				FlyWheel1.move(0);
 			}
 			pros::c::delay(10);
+			counter = counter + 10;
 		}
 		left_front.move(0);
 		left_middle.move(0);
@@ -192,13 +194,13 @@ private:
 
 	void Turn(double degrees, int speed)
 	{
-		left_front.move_relative((degrees / 360) * 3525, speed);
-		left_middle.move_relative((degrees / 360) * 3525, speed);
-		left_back.move_relative((degrees / 360) * 3525, speed);
+		left_front.move_relative((degrees / 360) * 3525 * 2/3, speed);
+		left_middle.move_relative((degrees / 360) * 3525 * 2/3, speed);
+		left_back.move_relative((degrees / 360) * 3525 * 2/3, speed);
 
-		right_front.move_relative((degrees / 360) * -3525, speed);
-		right_middle.move_relative((degrees / 360) * -3525, speed);
-		right_back.move_relative((degrees / 360) * 3525, speed);
+		right_front.move_relative((degrees / 360) * -3525 * 2/3, speed);
+		right_middle.move_relative((degrees / 360) * -3525 * 2/3, speed);
+		right_back.move_relative((degrees / 360) * 3525 * 2/3, speed);
 	}
 
 #ifdef VISION_ENABLED
@@ -261,11 +263,11 @@ private:
 
 public:
 	void runLeft() {
-			Turn(-9, 100);
+			Turn(-13.5, 100);
 			pros::c::delay(200);
 
-			FlyWheel1.move_velocity(-83);
-			Intake.move_velocity(-83);
+			FlyWheel1.move_velocity(-84);
+			Intake.move_velocity(-84);
 			pros::c::delay(3000);
 			
 			pros::c::adi_digital_write(ShootPort, HIGH);
@@ -274,48 +276,33 @@ public:
 			pros::c::adi_digital_write(ShootPort, LOW);
 			pros::c::delay(3500);
 
-			FlyWheel1.move_velocity(-91);
-			Intake.move_velocity(-91);
+			FlyWheel1.move_velocity(-92);
+			Intake.move_velocity(-92);
 			pros::c::adi_digital_write(ShootPort, HIGH);
 			pros::c::delay(400);
 
 			pros::c::adi_digital_write(ShootPort, LOW);
 			pros::c::delay(400);
 
-			Turn(9, 100);
+			Turn(13.5, 100);
 			FlyWheel1.move_velocity(90);
 			Intake.move_velocity(90);
 			pros::c::delay(250);
 
-			Move(140, -70, -70, false, 0, 0);
+			Move(140, -70, -70, false, 0, 0, 350);
 			pros::c::delay(50);
 
-			Move(100, 100, 100, false, 0, 0);
+			Move(100, 100, 100, false, 0, 0, 1000);
 			pros::c::delay(50);
 	}
 
 	void runRight() {
-			Move(500, 100, 100, false, 0, 0);
-			pros::c::delay(250);
 
-			Turn(-90, 100);
-			pros::c::delay(250);
-
-			FlyWheel1.move_velocity(90);
-			Intake.move_velocity(90);
-			pros::c::delay(250);
-
-			Move(175, -70, -70, false, 0, 0);
-			pros::c::delay(50);
-
-			Move(100, 100, 100, false, 0, 0);
-			pros::c::delay(50);
-
-			Turn(5, 100);
+		Turn(23, 100);
 			pros::c::delay(200);
 
-			FlyWheel1.move_velocity(-87);
-			Intake.move_velocity(-87);
+			FlyWheel1.move_velocity(-83);
+			Intake.move_velocity(-83);
 			pros::c::delay(4000);
 
 			pros::c::adi_digital_write(ShootPort, HIGH);
@@ -324,28 +311,38 @@ public:
 			pros::c::adi_digital_write(ShootPort, LOW);
 			pros::c::delay(4000);
 
-			FlyWheel1.move_velocity(-93);
-			Intake.move_velocity(-93);
+			FlyWheel1.move_velocity(-89);
+			Intake.move_velocity(-89);
 			pros::c::adi_digital_write(ShootPort, HIGH);
 
 			pros::c::delay(500);
 
 			pros::c::adi_digital_write(ShootPort, LOW);
 			pros::c::delay(400);
-	}
 
-	void runSkills() {
+			Turn(66, 100);
+			pros::c::delay(750);
+
+			Move(330, 100, 100, false, 0, 0, 1000);
+			pros::c::delay(250);
+
+			Turn(-89, 100);
+			pros::c::delay(450);
+
 			FlyWheel1.move_velocity(90);
 			Intake.move_velocity(90);
 			pros::c::delay(250);
 
-			Move(175, -70, -70, false, 0, 0);
-			pros::c::delay(200);
-
-			Move(100, 100, 100, false, 0, 0);
+			Move(140, -70, -70, false, 0, 0, 400);
 			pros::c::delay(50);
 
-			Turn(-9, 100);
+			Move(100, 100, 100, false, 0, 0, 10000);
+			pros::c::delay(50);
+
+	}
+
+	void runSkills() {
+			Turn(-6, 100);
 			pros::c::delay(200);
 
 			FlyWheel1.move_velocity(-87);
@@ -366,9 +363,24 @@ public:
 			pros::c::adi_digital_write(ShootPort, LOW);
 			pros::c::delay(400);
 
+			Turn(6, 100);
+			pros::c::delay(400);
+
+			FlyWheel1.move_velocity(90);
+			Intake.move_velocity(90);
+			pros::c::delay(250);
+
+			Move(175, -70, -70, false, 0, 0, 1000);
+			pros::c::delay(200);
+
+			Move(100, 100, 100, false, 0, 0, 1000);
+			pros::c::delay(50);
+
+
+
 			FlyWheel1.move_velocity(0);
 			Intake.move_velocity(0);
-			Turn(30, 100);
+			Turn(20, 100);
 			pros::c::delay(750);
 
 			pros::c::adi_digital_write(expansionPort2, HIGH);
