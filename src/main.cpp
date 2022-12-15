@@ -320,13 +320,13 @@ public:
 			pros::c::adi_digital_write(ShootPort, LOW);
 			pros::c::delay(400);
 
-			Turn(66, 100);
-			pros::c::delay(750);
+			Turn(62, 100);
+			pros::c::delay(1000);
 
-			Move(330, 100, 100, false, 0, 0, 1000);
-			pros::c::delay(250);
+			Move(470, 100, 100, false, 0, 0, 3000);
+			pros::c::delay(500);
 
-			Turn(-89, 100);
+			Turn(-75, 100);
 			pros::c::delay(450);
 
 			FlyWheel1.move_velocity(90);
