@@ -298,8 +298,8 @@ public:
 
 	void runRight() {
 
-		Turn(23, 100);
-			pros::c::delay(200);
+		Turn(24, 100);
+			pros::c::delay(300);
 
 			FlyWheel1.move_velocity(-83);
 			Intake.move_velocity(-83);
@@ -320,7 +320,7 @@ public:
 			pros::c::adi_digital_write(ShootPort, LOW);
 			pros::c::delay(400);
 
-			Turn(62, 100);
+			Turn(61, 100);
 			pros::c::delay(1000);
 
 			Move(470, 100, 100, false, 0, 0, 3000);
