@@ -27,7 +27,13 @@ extern "C" char const *const _PROS_COMPILE_DIRECTORY = "";
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define sign(x) ((x) > 0 ? 1 : -1)
 
-int autonSide = 1;
+enum AutonMode {
+	AutonLeft = 1,
+	AutonRight = 2,
+	AutonSkills = 3,
+};
+
+AutonMode autonSide = AutonLeft;
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -39,15 +45,15 @@ void initialize()
 
 	pros::lcd::initialize();
 
-	if (autonSide == 1)
+	if (autonSide == AutonLeft)
 	{
 		pros::lcd::set_text(1, "Selected Auton is Left");
 	}
-	if (autonSide == 2)
+	if (autonSide == AutonRight)
 	{
 		pros::lcd::set_text(1, "Selected Auton is Right");
 	}
-	if (autonSide == 3)
+	if (autonSide == AutonSkills)
 	{
 		pros::lcd::set_text(1, "Selected Auton is Skills");
 	}
@@ -90,6 +96,27 @@ class Autonomous
 	pros::Vision vision_sensor{VisionPort, pros::E_VISION_ZERO_CENTER};
 #endif
 
+#ifdef OPTICAL_ENABLED
+	pros::vision_signature_s_t sig1 = pros::c::vision_signature_from_utility(1, -2123, -1397, -1760, 8387, 10923, 9654, 3.100, 0);
+	pros::vision_signature_s_t sig2 = pros::c::vision_signature_from_utility(2, 8257, 10627, 9442, -863, -373, -618, 2.000, 0);
+#endif
+
+	// constructor
+public:
+	Autonomous() {
+#ifdef OPTICAL_ENABLED
+		vision_sensor.set_signature(1, &sig1);
+		vision_sensor.set_signature(2, &sig2);
+#endif
+		pros::c::adi_pin_mode(ShootPort, OUTPUT);
+		pros::c::adi_digital_write(ShootPort, LOW);
+		pros::c::adi_pin_mode(expansionPort, OUTPUT);
+		pros::c::adi_digital_write(expansionPort, LOW);
+		pros::c::adi_pin_mode(expansionPort2, OUTPUT);
+		pros::c::adi_digital_write(expansionPort2, LOW);
+	}
+
+private:
 	int getLeftPos()
 	{
 		return (left_front.get_position() + left_middle.get_position() + left_back.get_position()) / 3;
@@ -109,6 +136,7 @@ class Autonomous
 	{
 		return (FlyWheel1.get_position() + Intake.get_position()) / 2;
 	}
+
 	void Move(int ticks, int Lspeed, int Rspeed, bool intakeON, int intakeTicks, int intakeSpeed)
 	{
 		int startPos = getPos();
@@ -232,125 +260,138 @@ class Autonomous
 #endif
 
 public:
-	void run()
-	{
-#ifdef OPTICAL_ENABLED
-		pros::vision_signature_s_t sig1 = pros::c::vision_signature_from_utility(1, -2123, -1397, -1760, 8387, 10923, 9654, 3.100, 0);
-		pros::vision_signature_s_t sig2 = pros::c::vision_signature_from_utility(2, 8257, 10627, 9442, -863, -373, -618, 2.000, 0);
-		vision_sensor.set_signature(1, &sig1);
-		vision_sensor.set_signature(2, &sig2);
-#endif
-		pros::c::adi_pin_mode(ShootPort, OUTPUT);
-		pros::c::adi_digital_write(ShootPort, LOW);
-		pros::c::adi_pin_mode(expansionPort, OUTPUT);
-		pros::c::adi_digital_write(expansionPort, LOW);
-		pros::c::adi_pin_mode(expansionPort2, OUTPUT);
-		pros::c::adi_digital_write(expansionPort2, LOW);
-
-		if (autonSide == 1)
-		{
-			
-			pros::c::adi_pin_mode(ShootPort, OUTPUT);
-			pros::c::adi_digital_write(ShootPort, LOW);
+	void runLeft() {
 			Turn(-9, 100);
 			pros::c::delay(200);
+
 			FlyWheel1.move_velocity(-83);
 			Intake.move_velocity(-83);
 			pros::c::delay(3000);
+			
 			pros::c::adi_digital_write(ShootPort, HIGH);
 			pros::c::delay(400);
+
 			pros::c::adi_digital_write(ShootPort, LOW);
 			pros::c::delay(3500);
+
 			FlyWheel1.move_velocity(-91);
 			Intake.move_velocity(-91);
 			pros::c::adi_digital_write(ShootPort, HIGH);
 			pros::c::delay(400);
+
 			pros::c::adi_digital_write(ShootPort, LOW);
 			pros::c::delay(400);
+
 			Turn(9, 100);
 			FlyWheel1.move_velocity(90);
 			Intake.move_velocity(90);
 			pros::c::delay(250);
+
 			Move(140, -70, -70, false, 0, 0);
 			pros::c::delay(50);
+
 			Move(100, 100, 100, false, 0, 0);
 			pros::c::delay(50);
-			
-			FlyWheel1.move_velocity(0);
-			Intake.move_velocity(0);
-		}
-		else if (autonSide == 2)
-		{
-			pros::c::adi_pin_mode(ShootPort, OUTPUT);
-			pros::c::adi_digital_write(ShootPort, LOW);
+	}
+
+	void runRight() {
 			Move(500, 100, 100, false, 0, 0);
 			pros::c::delay(250);
+
 			Turn(-90, 100);
 			pros::c::delay(250);
+
 			FlyWheel1.move_velocity(90);
 			Intake.move_velocity(90);
 			pros::c::delay(250);
+
 			Move(175, -70, -70, false, 0, 0);
 			pros::c::delay(50);
+
 			Move(100, 100, 100, false, 0, 0);
 			pros::c::delay(50);
+
 			Turn(5, 100);
 			pros::c::delay(200);
+
 			FlyWheel1.move_velocity(-87);
 			Intake.move_velocity(-87);
 			pros::c::delay(4000);
+
 			pros::c::adi_digital_write(ShootPort, HIGH);
 			pros::c::delay(500);
+
 			pros::c::adi_digital_write(ShootPort, LOW);
 			pros::c::delay(4000);
+
 			FlyWheel1.move_velocity(-93);
 			Intake.move_velocity(-93);
 			pros::c::adi_digital_write(ShootPort, HIGH);
+
 			pros::c::delay(500);
+
 			pros::c::adi_digital_write(ShootPort, LOW);
 			pros::c::delay(400);
-			FlyWheel1.move_velocity(0);
-			Intake.move_velocity(0);
-		}
-		else if (autonSide == 3) // skills auto
-		{
-			
-			pros::c::adi_pin_mode(ShootPort, OUTPUT);
-			pros::c::adi_digital_write(ShootPort, LOW);
-			pros::c::adi_pin_mode(expansionPort, OUTPUT);
-		pros::c::adi_digital_write(expansionPort, LOW);
-		pros::c::adi_pin_mode(expansionPort2, OUTPUT);
-		pros::c::adi_digital_write(expansionPort2, LOW);
+	}
+
+	void runSkills() {
 			FlyWheel1.move_velocity(90);
 			Intake.move_velocity(90);
 			pros::c::delay(250);
+
 			Move(175, -70, -70, false, 0, 0);
 			pros::c::delay(200);
+
 			Move(100, 100, 100, false, 0, 0);
 			pros::c::delay(50);
+
 			Turn(-9, 100);
 			pros::c::delay(200);
+
 			FlyWheel1.move_velocity(-87);
 			Intake.move_velocity(-87);
 			pros::c::delay(3000);
+
 			pros::c::adi_digital_write(ShootPort, HIGH);
 			pros::c::delay(400);
+
 			pros::c::adi_digital_write(ShootPort, LOW);
 			pros::c::delay(3000);
+
 			FlyWheel1.move_velocity(-94);
 			Intake.move_velocity(-94);
 			pros::c::adi_digital_write(ShootPort, HIGH);
 			pros::c::delay(400);
+
 			pros::c::adi_digital_write(ShootPort, LOW);
 			pros::c::delay(400);
+
 			FlyWheel1.move_velocity(0);
 			Intake.move_velocity(0);
 			Turn(30, 100);
 			pros::c::delay(750);
+
 			pros::c::adi_digital_write(expansionPort2, HIGH);
 			pros::c::adi_digital_write(expansionPort, HIGH);
-			
+	}
+
+	void run()
+	{
+		if (autonSide == AutonLeft)
+		{
+			runLeft();
 		}
+		else if (autonSide == AutonRight)
+		{
+			runRight();
+		}
+		else if (autonSide == AutonSkills)
+		{
+			runSkills();
+		}
+
+		FlyWheel1.move_velocity(0);
+		Intake.move_velocity(0);
 	}
 };
 
@@ -418,31 +459,37 @@ void opcontrol()
 
 	while (true)
 	{
+		/**
+		 * Autonomous selection
+		*/
 		if (pros::lcd::read_buttons() == 4)
 		{
-			autonSide = 1;
+			autonSide = AutonLeft;
 		}
 		else if (pros::lcd::read_buttons() == 2)
 		{
-			autonSide = 2;
+			autonSide = AutonRight;
 		}
 		else if (pros::lcd::read_buttons() == 1)
 		{
-			autonSide = 3;
+			autonSide = AutonSkills;
 		}
-		if (autonSide == 1)
+		if (autonSide == AutonLeft)
 		{
 			pros::lcd::set_text(1, "Selected Auton is Left");
 		}
-		if (autonSide == 2)
+		if (autonSide == AutonRight)
 		{
 			pros::lcd::set_text(1, "Selected Auton is Right");
 		}
-		if (autonSide == 3)
+		if (autonSide == AutonSkills)
 		{
 			pros::lcd::set_text(1, "Selected Auton is Skills Skills");
 		}
 
+		/**
+		 * Drivetrain
+		*/
 		int leftSpeed = 0;
 		int rightSpeed = 0;
 		int analogY = master.get_analog(ANALOG_LEFT_Y);
@@ -479,55 +526,6 @@ void opcontrol()
 			rightSpeed = analogY;
 		}
 
-#ifdef OPTICAL_ENABLED
-		auto rgb_value = optical_sensor.get_rgb();
-		if (master.get_digital(DIGITAL_R1) && !rgb_value.blue && !rgb_value.blue)
-#endif 
-
-		if (master.get_digital_new_press(DIGITAL_A))
-		{
-			FlyWheelSpeed = defaultFlyWheelSpeed;
-		}
-
-		if (master.get_digital_new_press(DIGITAL_Y))
-		{
-			FlyWheelSpeed = -defaultFlyWheelSpeed;
-		}
-
-		// X press changes flywheel speed to high (defualt setting)
-		if (master.get_digital_new_press(DIGITAL_B))
-		{
-			FlyWheelSpeed = 0;
-			FlyWheel1.move_velocity(FlyWheelSpeed);
-			Intake.move_velocity(FlyWheelSpeed);
-		}
-
-		// B press changes flywheel speed to low setting
-		if (master.get_digital_new_press(DIGITAL_X))
-		{
-			FlyWheelSpeed = -100;
-		}
-		FlyWheel1.move_velocity(FlyWheelSpeed);
-		Intake.move_velocity(FlyWheelSpeed);
-
-		if (master.get_digital_new_press(DIGITAL_R2))
-		{
-			pros::c::adi_digital_write(ShootPort, HIGH);
-			pros::c::delay(250);
-		}
-		if (master.get_digital_new_press(DIGITAL_R2) == false)
-		{
-			pros::c::adi_digital_write(ShootPort, LOW);
-		}
-
-		if (master.get_digital(DIGITAL_L1) && master.get_digital(DIGITAL_R1))
-		{
-			pros::c::adi_digital_write(expansionPort, HIGH);
-			pros::c::adi_digital_write(expansionPort2, HIGH);
-			pros::c::delay(500);
-		}
-
-
 		if (abs(leftSpeed) < 40 && abs(rightSpeed) < 40)
 		{
 			left_front.move(leftSpeed);
@@ -545,6 +543,63 @@ void opcontrol()
 			right_front.move(rightSpeed * 1.574);
 			right_middle.move(rightSpeed * 1.574);
 			right_back.move(rightSpeed * -1.574);
+		}
+
+#ifdef OPTICAL_ENABLED
+		auto rgb_value = optical_sensor.get_rgb();
+		if (master.get_digital(DIGITAL_R1) && !rgb_value.blue && !rgb_value.blue)
+#endif 
+
+		/**
+		 * Flywheel
+		*/
+		if (master.get_digital_new_press(DIGITAL_A))
+		{
+			FlyWheelSpeed = defaultFlyWheelSpeed;
+		}
+
+		if (master.get_digital_new_press(DIGITAL_Y))
+		{
+			FlyWheelSpeed = -defaultFlyWheelSpeed;
+		}
+
+		// X press changes flywheel speed to high (default setting)
+		if (master.get_digital_new_press(DIGITAL_B))
+		{
+			FlyWheelSpeed = 0;
+			FlyWheel1.move_velocity(FlyWheelSpeed);
+			Intake.move_velocity(FlyWheelSpeed);
+		}
+
+		// B press changes flywheel speed to low setting
+		if (master.get_digital_new_press(DIGITAL_X))
+		{
+			FlyWheelSpeed = -100;
+		}
+		FlyWheel1.move_velocity(FlyWheelSpeed);
+		Intake.move_velocity(FlyWheelSpeed);
+
+		/**
+		 * Shooting disks
+		*/
+		if (master.get_digital_new_press(DIGITAL_R2))
+		{
+			pros::c::adi_digital_write(ShootPort, HIGH);
+			pros::c::delay(250);
+		}
+		if (master.get_digital_new_press(DIGITAL_R2) == false)
+		{
+			pros::c::adi_digital_write(ShootPort, LOW);
+		}
+
+		/**
+		 * End-game expansion
+		*/
+		if (master.get_digital(DIGITAL_L1) && master.get_digital(DIGITAL_R1))
+		{
+			pros::c::adi_digital_write(expansionPort, HIGH);
+			pros::c::adi_digital_write(expansionPort2, HIGH);
+			pros::c::delay(500);
 		}
 
 		pros::delay(10);
