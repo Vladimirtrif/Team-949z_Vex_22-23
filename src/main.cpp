@@ -135,23 +135,83 @@ private:
 		return (getLeftPos() + getRightPos()) / 2;
 	}
 
-	int getFlywheelPos()
+	double getFlywheelVelocity()
 	{
-		return (FlyWheel1.get_position() + Intake.get_position()) / 2;
+		return -(FlyWheel1.get_actual_velocity() + Intake.get_actual_velocity()) / 2;
 	}
 
-
-	void SetFlywheelSpeed(unsigned int speed)
+	void SetRollerVelocity(unsigned int speed)
 	{
 		FlyWheel1.move_velocity(speed);
 		Intake.move_velocity(speed);
 	}
 
-	void ReachConstantFlywheelSpeed(int speed)
+	void SetFlywheelVelocity(unsigned int speed)
 	{
-		FlyWheel1.move_velocity(speed);
-		Intake.move_velocity(speed);
-		pros::c::delay(3000);
+		FlyWheel1.move_velocity(-speed);
+		Intake.move_velocity(-speed);
+	}
+
+	void ReachConstantFlywheelVelocity2(unsigned int speed)
+	{
+		SetFlywheelVelocity(speed);
+		pros::c::delay(2000);
+
+		for (int i = 0; i < 100; i++) {
+			auto vel = getFlywheelVelocity();
+
+			printf("%.1f\n", vel);
+			pros::c::delay(10);
+		}
+	}
+
+	void ReachConstantFlywheelVelocity3(unsigned int speed)
+	{
+		SetFlywheelVelocity(speed);
+		pros::c::delay(1000);
+
+		auto prev = getFlywheelVelocity();
+		for (int i = 0; i < 200; i++) {
+			auto vel = getFlywheelVelocity();
+			auto delta = vel - speed;
+			if (abs(delta) <= 1) {
+				if (delta * (vel - prev) <= 0)
+					break;
+			}
+			prev = vel;
+
+			printf("%.1f\n", vel);
+			pros::c::delay(10);
+		}
+	}
+
+public:
+	void ReachConstantFlywheelVelocity(unsigned int speed)
+	{
+		SetFlywheelVelocity(speed);
+		pros::c::delay(1000);
+
+		for (int i = 0; i < 200; i++) {
+			auto vel = getFlywheelVelocity();
+
+			// Further out we are - the more voltage we need to faster get there
+			// But once we reach the speed, we need some power to simply maintain momentum
+			int voltage = 180 * (speed - vel) + speed * 60;
+
+			// Max is +-12,000
+			if (voltage >= 12000)
+				voltage = 12000;
+			// We do not go backwards - we simply let time slow down the wheel!
+			if (voltage < 0)
+				voltage = 0;
+
+			FlyWheel1.move_voltage(-voltage);
+			Intake.move_voltage(-voltage);
+
+			printf("%.1f %d\n", vel, voltage);
+			pros::c::delay(10);
+		}
+		SetFlywheelVelocity(speed);
 	}
 
 	void Move(int ticks, int Lspeed, int Rspeed, int timeOut)
@@ -261,13 +321,13 @@ public:
 		Turn(-13.5, 100);
 		pros::c::delay(200);
 
-		ReachConstantFlywheelSpeed(-84);
+		ReachConstantFlywheelVelocity(84);
 		ShootDisk();			
 
-		ReachConstantFlywheelSpeed(-84);
+		ReachConstantFlywheelVelocity(84);
 		ShootDisk();
 
-		SetFlywheelSpeed(90);
+		SetRollerVelocity(90);
 
 		Turn(13.5, 100);
 		pros::c::delay(250);
@@ -284,10 +344,10 @@ public:
 		Turn(24, 100);
 		pros::c::delay(300);
 
-		ReachConstantFlywheelSpeed(-83);
+		ReachConstantFlywheelVelocity(83);
 		ShootDisk();
 
-		ReachConstantFlywheelSpeed(-89);
+		ReachConstantFlywheelVelocity(89);
 		ShootDisk();
 
 		Turn(61, 100);
@@ -299,7 +359,7 @@ public:
 		Turn(-75, 100);
 		pros::c::delay(450);
 
-		SetFlywheelSpeed(90);
+		SetRollerVelocity(90);
 		pros::c::delay(250);
 
 		Move(140, -70, -70, 400);
@@ -313,16 +373,16 @@ public:
 		Turn(-6, 100);
 		pros::c::delay(200);
 
-		ReachConstantFlywheelSpeed(-87);
+		ReachConstantFlywheelVelocity(87);
 		ShootDisk();
 
-		ReachConstantFlywheelSpeed(-87);
+		ReachConstantFlywheelVelocity(87);
 		ShootDisk();
 
 		Turn(6, 100);
 		pros::c::delay(400);
 
-		SetFlywheelSpeed(90);
+		SetRollerVelocity(90);
 		pros::c::delay(250);
 
 		Move(175, -70, -70, 1000);
@@ -331,7 +391,7 @@ public:
 		Move(100, 100, 100, 1000);
 		pros::c::delay(50);
 
-		SetFlywheelSpeed(0);
+		SetRollerVelocity(0);
 		Turn(20, 100);
 		pros::c::delay(750);
 
@@ -354,7 +414,7 @@ public:
 			runSkills();
 		}
 
-		SetFlywheelSpeed(0);
+		SetRollerVelocity(0);
 	}
 };
 
@@ -419,6 +479,9 @@ void opcontrol()
 	int defaultFlyWheelSpeed = -65;
 	int FlyWheelSpeed = defaultFlyWheelSpeed;
 	int FlyWheelOn = 0;
+
+	Autonomous self_drive;
+	self_drive.ReachConstantFlywheelVelocity(84);
 
 	while (true)
 	{
