@@ -140,6 +140,20 @@ private:
 		return (FlyWheel1.get_position() + Intake.get_position()) / 2;
 	}
 
+
+	void SetFlywheelSpeed(unsigned int speed)
+	{
+		FlyWheel1.move_velocity(speed);
+		Intake.move_velocity(speed);
+	}
+
+	void ReachConstantFlywheelSpeed(int speed)
+	{
+		FlyWheel1.move_velocity(speed);
+		Intake.move_velocity(speed);
+		pros::c::delay(3000);
+	}
+
 	void Move(int ticks, int Lspeed, int Rspeed, int timeOut)
 	{
 		int counter = 0;
@@ -233,32 +247,29 @@ private:
 	}
 #endif
 
+	void ShootDisk()
+	{
+		pros::c::adi_digital_write(ShootPort, HIGH);
+		pros::c::delay(400);
+
+		pros::c::adi_digital_write(ShootPort, LOW);
+		pros::c::delay(400);
+	}
+
 public:
 	void runLeft() {
 			Turn(-13.5, 100);
 			pros::c::delay(200);
 
-			FlyWheel1.move_velocity(-84);
-			Intake.move_velocity(-84);
-			pros::c::delay(3000);
-			
-			pros::c::adi_digital_write(ShootPort, HIGH);
-			pros::c::delay(400);
+			ReachConstantFlywheelSpeed(-84);
+			ShootDisk();			
 
-			pros::c::adi_digital_write(ShootPort, LOW);
-			pros::c::delay(3500);
+			ReachConstantFlywheelSpeed(-84);
+			ShootDisk();
 
-			FlyWheel1.move_velocity(-92);
-			Intake.move_velocity(-92);
-			pros::c::adi_digital_write(ShootPort, HIGH);
-			pros::c::delay(400);
-
-			pros::c::adi_digital_write(ShootPort, LOW);
-			pros::c::delay(400);
+			SetFlywheelSpeed(90);
 
 			Turn(13.5, 100);
-			FlyWheel1.move_velocity(90);
-			Intake.move_velocity(90);
 			pros::c::delay(250);
 
 			Move(140, -70, -70, 350);
@@ -269,28 +280,14 @@ public:
 	}
 
 	void runRight() {
-
 		Turn(24, 100);
 			pros::c::delay(300);
 
-			FlyWheel1.move_velocity(-83);
-			Intake.move_velocity(-83);
-			pros::c::delay(4000);
+			ReachConstantFlywheelSpeed(-83);
+			ShootDisk();
 
-			pros::c::adi_digital_write(ShootPort, HIGH);
-			pros::c::delay(500);
-
-			pros::c::adi_digital_write(ShootPort, LOW);
-			pros::c::delay(4000);
-
-			FlyWheel1.move_velocity(-89);
-			Intake.move_velocity(-89);
-			pros::c::adi_digital_write(ShootPort, HIGH);
-
-			pros::c::delay(500);
-
-			pros::c::adi_digital_write(ShootPort, LOW);
-			pros::c::delay(400);
+			ReachConstantFlywheelSpeed(-89);
+			ShootDisk();
 
 			Turn(61, 100);
 			pros::c::delay(1000);
@@ -301,8 +298,7 @@ public:
 			Turn(-75, 100);
 			pros::c::delay(450);
 
-			FlyWheel1.move_velocity(90);
-			Intake.move_velocity(90);
+			SetFlywheelSpeed(90);
 			pros::c::delay(250);
 
 			Move(140, -70, -70, 400);
@@ -310,36 +306,22 @@ public:
 
 			Move(100, 100, 100, 10000);
 			pros::c::delay(50);
-
 	}
 
 	void runSkills() {
 			Turn(-6, 100);
 			pros::c::delay(200);
 
-			FlyWheel1.move_velocity(-87);
-			Intake.move_velocity(-87);
-			pros::c::delay(3000);
+			ReachConstantFlywheelSpeed(-87);
+			ShootDisk();
 
-			pros::c::adi_digital_write(ShootPort, HIGH);
-			pros::c::delay(400);
-
-			pros::c::adi_digital_write(ShootPort, LOW);
-			pros::c::delay(3000);
-
-			FlyWheel1.move_velocity(-94);
-			Intake.move_velocity(-94);
-			pros::c::adi_digital_write(ShootPort, HIGH);
-			pros::c::delay(400);
-
-			pros::c::adi_digital_write(ShootPort, LOW);
-			pros::c::delay(400);
+			ReachConstantFlywheelSpeed(-87);
+			ShootDisk();
 
 			Turn(6, 100);
 			pros::c::delay(400);
 
-			FlyWheel1.move_velocity(90);
-			Intake.move_velocity(90);
+			SetFlywheelSpeed(90);
 			pros::c::delay(250);
 
 			Move(175, -70, -70, 1000);
@@ -348,10 +330,7 @@ public:
 			Move(100, 100, 100, 1000);
 			pros::c::delay(50);
 
-
-
-			FlyWheel1.move_velocity(0);
-			Intake.move_velocity(0);
+			SetFlywheelSpeed(0);
 			Turn(20, 100);
 			pros::c::delay(750);
 
@@ -374,8 +353,7 @@ public:
 			runSkills();
 		}
 
-		FlyWheel1.move_velocity(0);
-		Intake.move_velocity(0);
+		SetFlywheelSpeed(0);
 	}
 };
 
@@ -540,8 +518,6 @@ void opcontrol()
 		if (master.get_digital_new_press(DIGITAL_B))
 		{
 			FlyWheelSpeed = 0;
-			FlyWheel1.move_velocity(FlyWheelSpeed);
-			Intake.move_velocity(FlyWheelSpeed);
 		}
 
 		// B press changes flywheel speed to low setting
