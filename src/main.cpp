@@ -34,17 +34,8 @@ enum AutonMode {
 };
 
 AutonMode autonSide = AutonRight;
-/**
- * Runs initialization code. This occurs as soon as the program is started.
- *
- * All other competition modes are blocked by initialize; it is recommended
- * to keep execution time for this mode under a few seconds.
- */
-void initialize()
-{
 
-	pros::lcd::initialize();
-
+void printAutonMessage() {
 	if (autonSide == AutonLeft)
 	{
 		pros::lcd::set_text(1, "Selected Auton is Left");
@@ -57,6 +48,18 @@ void initialize()
 	{
 		pros::lcd::set_text(1, "Selected Auton is Skills");
 	}
+}
+
+/**
+ * Runs initialization code. This occurs as soon as the program is started.
+ *
+ * All other competition modes are blocked by initialize; it is recommended
+ * to keep execution time for this mode under a few seconds.
+ */
+void initialize()
+{
+	pros::lcd::initialize();
+	printAutonMessage();
 }
 
 /**
@@ -137,29 +140,18 @@ private:
 		return (FlyWheel1.get_position() + Intake.get_position()) / 2;
 	}
 
-	void Move(int ticks, int Lspeed, int Rspeed, bool intakeON, int intakeTicks, int intakeSpeed, int timeOut)
+	void Move(int ticks, int Lspeed, int Rspeed, int timeOut)
 	{
 		int counter = 0;
 		int startPos = getPos();
-		int flywheelStartPos = getLeftPos();
 		left_front.move(Lspeed * 127 / 200);
 		left_middle.move(Lspeed * 127 / 200);
 		left_back.move(Lspeed * 127 / 200);
 		right_front.move(Rspeed * 127 / 200);
 		right_middle.move(Rspeed * 127 / 200);
 		right_back.move(-Rspeed * 127 / 200);
-		if (intakeON)
-		{
-			FlyWheel1.move(intakeSpeed);
-			Intake.move(intakeSpeed);
-		}
 		while (abs(getPos() - startPos) < ticks && counter <= timeOut)
 		{
-			if (abs(getFlywheelPos() - flywheelStartPos) == intakeTicks && intakeON)
-			{
-				Intake.move(0);
-				FlyWheel1.move(0);
-			}
 			pros::c::delay(10);
 			counter = counter + 10;
 		}
@@ -169,26 +161,6 @@ private:
 		right_front.move(0);
 		right_middle.move(0);
 		right_back.move(0);
-		if (intakeON)
-		{
-			FlyWheel1.move(0);
-			Intake.move(0);
-		}
-		pros::c::delay(100);
-	}
-
-	void flyWheelMove(int FlyWheelTicks, int FSpeed)
-	{
-		FlyWheel1.move(FSpeed);
-		int flyWheelStartPos = getFlywheelPos();
-		FlyWheel1.move(FSpeed);
-		Intake.move(FSpeed);
-		while (abs(getFlywheelPos() - flyWheelStartPos) < FlyWheelTicks)
-		{
-			pros::c::delay(10);
-		}
-		FlyWheel1.move(0);
-		Intake.move(0);
 		pros::c::delay(100);
 	}
 
@@ -289,10 +261,10 @@ public:
 			Intake.move_velocity(90);
 			pros::c::delay(250);
 
-			Move(140, -70, -70, false, 0, 0, 350);
+			Move(140, -70, -70, 350);
 			pros::c::delay(50);
 
-			Move(100, 100, 100, false, 0, 0, 1000);
+			Move(100, 100, 100, 1000);
 			pros::c::delay(50);
 	}
 
@@ -323,7 +295,7 @@ public:
 			Turn(61, 100);
 			pros::c::delay(1000);
 
-			Move(470, 100, 100, false, 0, 0, 3000);
+			Move(470, 100, 100, 3000);
 			pros::c::delay(500);
 
 			Turn(-75, 100);
@@ -333,10 +305,10 @@ public:
 			Intake.move_velocity(90);
 			pros::c::delay(250);
 
-			Move(140, -70, -70, false, 0, 0, 400);
+			Move(140, -70, -70, 400);
 			pros::c::delay(50);
 
-			Move(100, 100, 100, false, 0, 0, 10000);
+			Move(100, 100, 100, 10000);
 			pros::c::delay(50);
 
 	}
@@ -370,10 +342,10 @@ public:
 			Intake.move_velocity(90);
 			pros::c::delay(250);
 
-			Move(175, -70, -70, false, 0, 0, 1000);
+			Move(175, -70, -70, 1000);
 			pros::c::delay(200);
 
-			Move(100, 100, 100, false, 0, 0, 1000);
+			Move(100, 100, 100, 1000);
 			pros::c::delay(50);
 
 
@@ -486,18 +458,7 @@ void opcontrol()
 		{
 			autonSide = AutonSkills;
 		}
-		if (autonSide == AutonLeft)
-		{
-			pros::lcd::set_text(1, "Selected Auton is Left");
-		}
-		if (autonSide == AutonRight)
-		{
-			pros::lcd::set_text(1, "Selected Auton is Right");
-		}
-		if (autonSide == AutonSkills)
-		{
-			pros::lcd::set_text(1, "Selected Auton is Skills Skills");
-		}
+		printAutonMessage();
 
 		/**
 		 * Drivetrain
