@@ -80,9 +80,15 @@ void disabled() {}
  */
 void competition_initialize() {}
 
-class Autonomous
-{
 
+/**
+ * 
+ * Program - common code between Autonomous & manual driving
+ * 
+*/
+class Program
+{
+protected:
 	pros::Controller master{CONTROLLER_MASTER};
 
 	pros::Motor left_front{LeftFrontPort};
@@ -93,6 +99,7 @@ class Autonomous
 	pros::Motor right_middle{RightMiddlePort};
 	pros::Motor right_back{RightBackPort};
 
+	// Should be E_MOTOR_GEARSET_06 - 600 rpm
 	pros::Motor FlyWheel1{fly_wheel1, MOTOR_GEARSET_36, true}; // Pick correct gearset (36 is red)
 	pros::Motor Intake{intake, MOTOR_GEARSET_36, true};		   // Pick correct gearset (36 is red)
 #ifdef VISION_ENABLED
@@ -106,7 +113,7 @@ class Autonomous
 
 	// constructor
 public:
-	Autonomous() {
+	Program() {
 #ifdef OPTICAL_ENABLED
 		vision_sensor.set_signature(1, &sig1);
 		vision_sensor.set_signature(2, &sig2);
@@ -119,20 +126,14 @@ public:
 		pros::c::adi_digital_write(expansionPort2, LOW);
 	}
 
-private:
-	int getLeftPos()
+public:
+	void ShootDisk()
 	{
-		return (left_front.get_position() + left_middle.get_position() + left_back.get_position()) / 3;
-	}
+		pros::c::adi_digital_write(ShootPort, HIGH);
+		pros::c::delay(250);
 
-	int getRightPos()
-	{
-		return (right_front.get_position() + right_middle.get_position() + right_back.get_position()) / 3;
-	}
-
-	int getPos()
-	{
-		return (getLeftPos() + getRightPos()) / 2;
+		pros::c::adi_digital_write(ShootPort, LOW);
+		pros::c::delay(250);
 	}
 
 	double getFlywheelVelocity()
@@ -152,20 +153,21 @@ private:
 		Intake.move_velocity(-speed);
 	}
 
-	void ReachConstantFlywheelVelocity2(unsigned int speed)
+	void ShootDiskAccurate(unsigned int speed)
 	{
 		SetFlywheelVelocity(speed);
 		pros::c::delay(2000);
 
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < 200; i++) {
 			auto vel = getFlywheelVelocity();
 
 			printf("%.1f\n", vel);
 			pros::c::delay(10);
 		}
+		// ShootDisk();
 	}
 
-	void ReachConstantFlywheelVelocity3(unsigned int speed)
+	void ShootDiskAccurate3(unsigned int speed)
 	{
 		SetFlywheelVelocity(speed);
 		pros::c::delay(1000);
@@ -174,6 +176,8 @@ private:
 		for (int i = 0; i < 200; i++) {
 			auto vel = getFlywheelVelocity();
 			auto delta = vel - speed;
+			// If we are pretty close to target, and we speed changes in the direction of the target
+			// (i.e. if we are slower than target & speed is increasing over time), then stop and shoot.
 			if (abs(delta) <= 1) {
 				if (delta * (vel - prev) <= 0)
 					break;
@@ -183,10 +187,10 @@ private:
 			printf("%.1f\n", vel);
 			pros::c::delay(10);
 		}
+		ShootDisk();
 	}
 
-public:
-	void ReachConstantFlywheelVelocity(unsigned int speed)
+	void ShootDiskAccurate1(unsigned int speed)
 	{
 		SetFlywheelVelocity(speed);
 		pros::c::delay(1000);
@@ -211,30 +215,61 @@ public:
 			printf("%.1f %d\n", vel, voltage);
 			pros::c::delay(10);
 		}
+
 		SetFlywheelVelocity(speed);
+		ShootDisk();
+	}
+
+	void SetDrive(int Lspeed, int Rspeed)
+	{
+		left_front.move(Lspeed);
+		left_middle.move(Lspeed);
+		left_back.move(Lspeed);
+		right_front.move(Rspeed);
+		right_middle.move(Rspeed);
+		right_back.move(-Rspeed);
+	}
+};
+
+
+/**
+ * 
+ * Autonomous - Autonomous related code
+ * 
+*/
+class Autonomous : public Program
+{
+
+private:
+	int getLeftPos()
+	{
+		return (left_front.get_position() + left_middle.get_position() + left_back.get_position()) / 3;
+	}
+
+	int getRightPos()
+	{
+		return (right_front.get_position() + right_middle.get_position() + right_back.get_position()) / 3;
+	}
+
+	int getPos()
+	{
+		return (getLeftPos() + getRightPos()) / 2;
 	}
 
 	void Move(int ticks, int Lspeed, int Rspeed, int timeOut)
 	{
 		int counter = 0;
 		int startPos = getPos();
-		left_front.move(Lspeed * 127 / 200);
-		left_middle.move(Lspeed * 127 / 200);
-		left_back.move(Lspeed * 127 / 200);
-		right_front.move(Rspeed * 127 / 200);
-		right_middle.move(Rspeed * 127 / 200);
-		right_back.move(-Rspeed * 127 / 200);
+
+		SetDrive(Lspeed * 127 / 200, Rspeed * 127 / 200);
+
 		while (abs(getPos() - startPos) < ticks && counter <= timeOut)
 		{
 			pros::c::delay(10);
 			counter = counter + 10;
 		}
-		left_front.move(0);
-		left_middle.move(0);
-		left_back.move(0);
-		right_front.move(0);
-		right_middle.move(0);
-		right_back.move(0);
+
+		SetDrive(0, 0);
 		pros::c::delay(100);
 	}
 
@@ -291,41 +326,23 @@ public:
 				}
 			}
 
-			left_front.move(Lspeed * 127 / 200);
-			left_middle.move(Lspeed * 127 / 200);
-			left_back.move(Lspeed * 127 / 200);
-			right_front.move(Rspeed * 127 / 200);
-			right_middle.move(Rspeed * 127 / 200);
-			right_back.move(-Rspeed * 127 / 200);
-			left_front.move(0);
-			left_middle.move(0);
-			left_back.move(0);
-			right_front.move(0);
-			right_middle.move(0);
-			right_back.move(0);
+			SetDrive(Lspeed * 127 / 200, Rspeed * 127 / 200);
 		}
+		SetDrive(0, 0);
 	}
 #endif
 
-	void ShootDisk()
-	{
-		pros::c::adi_digital_write(ShootPort, HIGH);
-		pros::c::delay(400);
-
-		pros::c::adi_digital_write(ShootPort, LOW);
-		pros::c::delay(400);
-	}
-
 public:
 	void runLeft() {
+		// prep flywheel
+		SetFlywheelVelocity(84);
+
 		Turn(-13.5, 100);
 		pros::c::delay(200);
 
-		ReachConstantFlywheelVelocity(84);
-		ShootDisk();			
+		ShootDiskAccurate(84);
 
-		ReachConstantFlywheelVelocity(84);
-		ShootDisk();
+		ShootDiskAccurate(84);
 
 		SetRollerVelocity(90);
 
@@ -340,15 +357,15 @@ public:
 	}
 
 	void runRight() {
+		// prep flywheel
+		SetFlywheelVelocity(83);
 
 		Turn(24, 100);
 		pros::c::delay(300);
 
-		ReachConstantFlywheelVelocity(83);
-		ShootDisk();
+		ShootDiskAccurate(83);
 
-		ReachConstantFlywheelVelocity(89);
-		ShootDisk();
+		ShootDiskAccurate(89);
 
 		Turn(61, 100);
 		pros::c::delay(1000);
@@ -370,14 +387,15 @@ public:
 	}
 
 	void runSkills() {
+		// prep flywheel
+		SetFlywheelVelocity(87);
+
 		Turn(-6, 100);
 		pros::c::delay(200);
 
-		ReachConstantFlywheelVelocity(87);
-		ShootDisk();
+		ShootDiskAccurate(87);
 
-		ReachConstantFlywheelVelocity(87);
-		ShootDisk();
+		ShootDiskAccurate(87);
 
 		Turn(6, 100);
 		pros::c::delay(400);
@@ -435,6 +453,7 @@ void autonomous()
 	self_drive.run();
 }
 
+
 /**
  * Runs the operator control code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -448,173 +467,147 @@ void autonomous()
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
+class OpControl: public Program {
+public:
+	void opcontrol() {
+		pros::Controller master(CONTROLLER_MASTER);
+	#ifdef OPTICAL_ENABLED
+		pros::Optical optical_sensor(opticalPort);
+	#endif
+
+		int dead_Zone = 10; // the dead zone for the joysticks
+		const int defaultFlyWheelSpeed = -65;
+		int FlyWheelSpeed = defaultFlyWheelSpeed;
+		int FlyWheelOn = 0;
+
+		ShootDiskAccurate(84);
+
+		while (true)
+		{
+			/**
+			 * Autonomous selection
+			*/
+			if (pros::lcd::read_buttons() == 4)
+			{
+				autonSide = AutonLeft;
+			}
+			else if (pros::lcd::read_buttons() == 2)
+			{
+				autonSide = AutonRight;
+			}
+			else if (pros::lcd::read_buttons() == 1)
+			{
+				autonSide = AutonSkills;
+			}
+			printAutonMessage();
+
+			/**
+			 * Drivetrain
+			*/
+			int leftSpeed = 0;
+			int rightSpeed = 0;
+			int analogY = master.get_analog(ANALOG_LEFT_Y);
+			int analogX = master.get_analog(ANALOG_RIGHT_X);
+
+			if (analogY == 0 && abs(analogX) > dead_Zone)
+			{
+				leftSpeed = analogX;
+				rightSpeed = -analogX;
+			}
+			else if (analogX >= dead_Zone && analogY > dead_Zone)
+			{
+				leftSpeed = analogY;
+				rightSpeed = analogY - analogX;
+			}
+			else if (analogX < -dead_Zone && analogY > dead_Zone)
+			{
+				leftSpeed = analogY + analogX;
+				rightSpeed = analogY;
+			}
+			else if (analogX >= dead_Zone && analogY < -dead_Zone)
+			{
+				leftSpeed = analogY;
+				rightSpeed = analogY + analogX;
+			}
+			else if (analogX < -dead_Zone && analogY < -dead_Zone)
+			{
+				leftSpeed = analogY - analogX;
+				rightSpeed = analogY;
+			}
+			else if (analogX == 0 && abs(analogY) > dead_Zone)
+			{
+				leftSpeed = analogY;
+				rightSpeed = analogY;
+			}
+
+			if (abs(leftSpeed) < 40 && abs(rightSpeed) < 40)
+			{
+				SetDrive(leftSpeed, rightSpeed);
+			}
+			else
+			{
+				SetDrive(leftSpeed * 1.574, rightSpeed * 1.574);
+			}
+
+	#ifdef OPTICAL_ENABLED
+			auto rgb_value = optical_sensor.get_rgb();
+			if (master.get_digital(DIGITAL_R1) && !rgb_value.blue && !rgb_value.blue)
+	#endif 
+
+			/**
+			 * Flywheel
+			*/
+			// Roller, flywheel is not powered
+			if (master.get_digital_new_press(DIGITAL_A))
+			{
+				FlyWheelSpeed = defaultFlyWheelSpeed;
+			}
+
+			// Flywheel is powered, low setting
+			if (master.get_digital_new_press(DIGITAL_Y))
+			{
+				FlyWheelSpeed = -defaultFlyWheelSpeed;
+			}
+
+			if (master.get_digital_new_press(DIGITAL_B))
+			{
+				FlyWheelSpeed = 0;
+			}
+
+			// Flywheel speed is high
+			if (master.get_digital_new_press(DIGITAL_X))
+			{
+				FlyWheelSpeed = -100;
+			}
+
+			FlyWheel1.move_velocity(FlyWheelSpeed);
+			Intake.move_velocity(FlyWheelSpeed);
+
+			/**
+			 * Shooting disks
+			*/
+			if (master.get_digital_new_press(DIGITAL_R2))
+			{
+				ShootDisk();
+			}
+
+			/**
+			 * End-game expansion
+			*/
+			if (master.get_digital(DIGITAL_L1) && master.get_digital(DIGITAL_R1))
+			{
+				pros::c::adi_digital_write(expansionPort, HIGH);
+				pros::c::adi_digital_write(expansionPort2, HIGH);
+				pros::c::delay(500);
+			}
+
+			pros::delay(10);
+		}
+	}
+};
 
 void opcontrol()
 {
-	pros::Controller master(CONTROLLER_MASTER);
-#ifdef OPTICAL_ENABLED
-	pros::Optical optical_sensor(opticalPort);
-#endif
-
-	pros::Motor left_front(LeftFrontPort);
-	pros::Motor left_middle(LeftMiddlePort, true);
-	pros::Motor left_back(LeftBackPort);
-
-	pros::Motor right_front(RightFrontPort, true);
-	pros::Motor right_middle(RightMiddlePort);
-	pros::Motor right_back(RightBackPort);
-
-	pros::Motor FlyWheel1(fly_wheel1, MOTOR_GEARSET_36, true); // Pick correct gearset (36 is red)
-	pros::Motor Intake(intake, MOTOR_GEARSET_36, true);		   // Pick correct gearset (36 is red
-
-	pros::c::adi_pin_mode(ShootPort, OUTPUT);
-	pros::c::adi_digital_write(ShootPort, LOW); // write LOW to port 1 (solenoid may be extended or not, depending on wiring)
-
-	pros::c::adi_pin_mode(expansionPort, OUTPUT);
-	pros::c::adi_digital_write(expansionPort, LOW);
-	pros::c::adi_pin_mode(expansionPort2, OUTPUT);
-	pros::c::adi_digital_write(expansionPort2, LOW);
-
-	int dead_Zone = 10; // the deadzone for the joysticks
-	int defaultFlyWheelSpeed = -65;
-	int FlyWheelSpeed = defaultFlyWheelSpeed;
-	int FlyWheelOn = 0;
-
-	Autonomous self_drive;
-	self_drive.ReachConstantFlywheelVelocity(84);
-
-	while (true)
-	{
-		/**
-		 * Autonomous selection
-		*/
-		if (pros::lcd::read_buttons() == 4)
-		{
-			autonSide = AutonLeft;
-		}
-		else if (pros::lcd::read_buttons() == 2)
-		{
-			autonSide = AutonRight;
-		}
-		else if (pros::lcd::read_buttons() == 1)
-		{
-			autonSide = AutonSkills;
-		}
-		printAutonMessage();
-
-		/**
-		 * Drivetrain
-		*/
-		int leftSpeed = 0;
-		int rightSpeed = 0;
-		int analogY = master.get_analog(ANALOG_LEFT_Y);
-		int analogX = master.get_analog(ANALOG_RIGHT_X);
-
-		if (analogY == 0 && abs(analogX) > dead_Zone)
-		{
-			leftSpeed = analogX;
-			rightSpeed = -analogX;
-		}
-		else if (analogX >= dead_Zone && analogY > dead_Zone)
-		{
-			leftSpeed = analogY;
-			rightSpeed = analogY - analogX;
-		}
-		else if (analogX < -dead_Zone && analogY > dead_Zone)
-		{
-			leftSpeed = analogY + analogX;
-			rightSpeed = analogY;
-		}
-		else if (analogX >= dead_Zone && analogY < -dead_Zone)
-		{
-			leftSpeed = analogY;
-			rightSpeed = analogY + analogX;
-		}
-		else if (analogX < -dead_Zone && analogY < -dead_Zone)
-		{
-			leftSpeed = analogY - analogX;
-			rightSpeed = analogY;
-		}
-		else if (analogX == 0 && abs(analogY) > dead_Zone)
-		{
-			leftSpeed = analogY;
-			rightSpeed = analogY;
-		}
-
-		if (abs(leftSpeed) < 40 && abs(rightSpeed) < 40)
-		{
-			left_front.move(leftSpeed);
-			left_middle.move(leftSpeed);
-			left_back.move(leftSpeed);
-			right_front.move(rightSpeed);
-			right_middle.move(rightSpeed);
-			right_back.move(-rightSpeed);
-		}
-		else
-		{
-			left_front.move(leftSpeed * 1.574);
-			left_middle.move(leftSpeed * 1.574);
-			left_back.move(leftSpeed * 1.574);
-			right_front.move(rightSpeed * 1.574);
-			right_middle.move(rightSpeed * 1.574);
-			right_back.move(rightSpeed * -1.574);
-		}
-
-#ifdef OPTICAL_ENABLED
-		auto rgb_value = optical_sensor.get_rgb();
-		if (master.get_digital(DIGITAL_R1) && !rgb_value.blue && !rgb_value.blue)
-#endif 
-
-		/**
-		 * Flywheel
-		*/
-		if (master.get_digital_new_press(DIGITAL_A))
-		{
-			FlyWheelSpeed = defaultFlyWheelSpeed;
-		}
-
-		if (master.get_digital_new_press(DIGITAL_Y))
-		{
-			FlyWheelSpeed = -defaultFlyWheelSpeed;
-		}
-
-		// X press changes flywheel speed to high (default setting)
-		if (master.get_digital_new_press(DIGITAL_B))
-		{
-			FlyWheelSpeed = 0;
-		}
-
-		// B press changes flywheel speed to low setting
-		if (master.get_digital_new_press(DIGITAL_X))
-		{
-			FlyWheelSpeed = -100;
-		}
-		FlyWheel1.move_velocity(FlyWheelSpeed);
-		Intake.move_velocity(FlyWheelSpeed);
-
-		/**
-		 * Shooting disks
-		*/
-		if (master.get_digital_new_press(DIGITAL_R2))
-		{
-			pros::c::adi_digital_write(ShootPort, HIGH);
-			pros::c::delay(250);
-		}
-		if (master.get_digital_new_press(DIGITAL_R2) == false)
-		{
-			pros::c::adi_digital_write(ShootPort, LOW);
-		}
-
-		/**
-		 * End-game expansion
-		*/
-		if (master.get_digital(DIGITAL_L1) && master.get_digital(DIGITAL_R1))
-		{
-			pros::c::adi_digital_write(expansionPort, HIGH);
-			pros::c::adi_digital_write(expansionPort2, HIGH);
-			pros::c::delay(500);
-		}
-
-		pros::delay(10);
-	}
+	OpControl program;
+	program.opcontrol();
 }
