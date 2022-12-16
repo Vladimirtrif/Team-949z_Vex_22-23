@@ -258,84 +258,85 @@ private:
 
 public:
 	void runLeft() {
-			Turn(-13.5, 100);
-			pros::c::delay(200);
+		Turn(-13.5, 100);
+		pros::c::delay(200);
 
-			ReachConstantFlywheelSpeed(-84);
-			ShootDisk();			
+		ReachConstantFlywheelSpeed(-84);
+		ShootDisk();			
 
-			ReachConstantFlywheelSpeed(-84);
-			ShootDisk();
+		ReachConstantFlywheelSpeed(-84);
+		ShootDisk();
 
-			SetFlywheelSpeed(90);
+		SetFlywheelSpeed(90);
 
-			Turn(13.5, 100);
-			pros::c::delay(250);
+		Turn(13.5, 100);
+		pros::c::delay(250);
 
-			Move(140, -70, -70, 350);
-			pros::c::delay(50);
+		Move(140, -70, -70, 350);
+		pros::c::delay(50);
 
-			Move(100, 100, 100, 1000);
-			pros::c::delay(50);
+		Move(100, 100, 100, 1000);
+		pros::c::delay(50);
 	}
 
 	void runRight() {
+
 		Turn(24, 100);
-			pros::c::delay(300);
+		pros::c::delay(300);
 
-			ReachConstantFlywheelSpeed(-83);
-			ShootDisk();
+		ReachConstantFlywheelSpeed(-83);
+		ShootDisk();
 
-			ReachConstantFlywheelSpeed(-89);
-			ShootDisk();
+		ReachConstantFlywheelSpeed(-89);
+		ShootDisk();
 
-			Turn(61, 100);
-			pros::c::delay(1000);
+		Turn(61, 100);
+		pros::c::delay(1000);
 
-			Move(470, 100, 100, 3000);
-			pros::c::delay(500);
+		Move(470, 100, 100, 3000);
+		pros::c::delay(500);
 
-			Turn(-75, 100);
-			pros::c::delay(450);
+		Turn(-75, 100);
+		pros::c::delay(450);
 
-			SetFlywheelSpeed(90);
-			pros::c::delay(250);
+		SetFlywheelSpeed(90);
+		pros::c::delay(250);
 
-			Move(140, -70, -70, 400);
-			pros::c::delay(50);
+		Move(140, -70, -70, 400);
+		pros::c::delay(50);
 
-			Move(100, 100, 100, 10000);
-			pros::c::delay(50);
+		Move(100, 100, 100, 10000);
+		pros::c::delay(50);
 	}
 
 	void runSkills() {
-			Turn(-6, 100);
-			pros::c::delay(200);
+		Turn(-6, 100);
+		pros::c::delay(200);
 
-			ReachConstantFlywheelSpeed(-87);
-			ShootDisk();
+		ReachConstantFlywheelSpeed(-87);
+		ShootDisk();
 
-			ReachConstantFlywheelSpeed(-87);
-			ShootDisk();
+		ReachConstantFlywheelSpeed(-87);
+		ShootDisk();
 
-			Turn(6, 100);
-			pros::c::delay(400);
+		Turn(6, 100);
+		pros::c::delay(400);
 
-			SetFlywheelSpeed(90);
-			pros::c::delay(250);
+		SetFlywheelSpeed(90);
+		pros::c::delay(250);
 
-			Move(175, -70, -70, 1000);
-			pros::c::delay(200);
+		Move(175, -70, -70, 1000);
+		pros::c::delay(200);
 
-			Move(100, 100, 100, 1000);
-			pros::c::delay(50);
+		Move(100, 100, 100, 1000);
+		pros::c::delay(50);
 
-			SetFlywheelSpeed(0);
-			Turn(20, 100);
-			pros::c::delay(750);
+		SetFlywheelSpeed(0);
+		Turn(20, 100);
+		pros::c::delay(750);
 
-			pros::c::adi_digital_write(expansionPort2, HIGH);
-			pros::c::adi_digital_write(expansionPort, HIGH);
+		pros::c::adi_digital_write(expansionPort2, HIGH);
+		pros::c::adi_digital_write(expansionPort, HIGH);
 	}
 
 	void run()
