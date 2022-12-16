@@ -12,6 +12,10 @@
 #  include "pros/optical.hpp"
 #endif
 
+// Disables all the logging. Comment it out and uncomment next line to get logging working.
+#define log(...) (void)0
+// #define log printf
+
 /*
  * Presence of these two variables here replaces _pros_ld_timestamp step in common.mk.
  * THis way we get equivalent behavior without extra .c file to compile, and this faster build.
@@ -153,71 +157,100 @@ public:
 		Intake.move_velocity(-speed);
 	}
 
+	void ShootDiskAccurate_old(unsigned int speed)
+	{
+        SetFlywheelVelocity(speed);
+        pros::c::delay(2000);
+
+        for (int i = 0; i < 200; i++) {
+            auto vel = getFlywheelVelocity();
+
+            log("%.1f\n", vel);
+            pros::c::delay(10);
+        }
+        ShootDisk();
+	}
+
 	void ShootDiskAccurate(unsigned int speed)
 	{
+		// max time we wait for flywehee to reach desired speed, using SetFlywheelVelocity() flow
+		auto waitTimeMax = 400;
+		// If speed is achieved sooner than above timeout, we wait extra 20 cycles before switching
+		// to waiting using voltage-based algorithm 
+		auto autoextraWaitAfterReachingSpeed = 70;
+		// Time we wait using voltage-setting algorithm
+		auto settlementTime = 180;
+		// amount of time we wait after extending piston before retrieving it back
+		auto pistonExtendedTime = 40;
+
 		SetFlywheelVelocity(speed);
-		pros::c::delay(2000);
 
-		for (int i = 0; i < 200; i++) {
-			auto vel = getFlywheelVelocity();
+		unsigned int counter = 0;
+		double speedsum = 0;
 
-			printf("%.1f\n", vel);
-			pros::c::delay(10);
-		}
-		// ShootDisk();
-	}
-
-	void ShootDiskAccurate3(unsigned int speed)
-	{
-		SetFlywheelVelocity(speed);
-		pros::c::delay(1000);
-
-		auto prev = getFlywheelVelocity();
-		for (int i = 0; i < 200; i++) {
-			auto vel = getFlywheelVelocity();
-			auto delta = vel - speed;
-			// If we are pretty close to target, and we speed changes in the direction of the target
-			// (i.e. if we are slower than target & speed is increasing over time), then stop and shoot.
-			if (abs(delta) <= 1) {
-				if (delta * (vel - prev) <= 0)
-					break;
-			}
-			prev = vel;
-
-			printf("%.1f\n", vel);
-			pros::c::delay(10);
-		}
-		ShootDisk();
-	}
-
-	void ShootDiskAccurate1(unsigned int speed)
-	{
-		SetFlywheelVelocity(speed);
-		pros::c::delay(1000);
-
-		for (int i = 0; i < 200; i++) {
-			auto vel = getFlywheelVelocity();
+		while (true) {
 
 			// Further out we are - the more voltage we need to faster get there
 			// But once we reach the speed, we need some power to simply maintain momentum
-			int voltage = 180 * (speed - vel) + speed * 60;
+			auto vel = getFlywheelVelocity();
 
-			// Max is +-12,000
-			if (voltage >= 12000)
-				voltage = 12000;
-			// We do not go backwards - we simply let time slow down the wheel!
-			if (voltage < 0)
-				voltage = 0;
+			// Are we still waiting for flywheel to speed up?
+			if (waitTimeMax > 0)
+			{
+				waitTimeMax--;
+				// if we reached desired speed, we are moving to settlement period
+				// But give it 200ms to work through with velocity-based algorithm
+				if (vel >= speed && waitTimeMax >= autoextraWaitAfterReachingSpeed)
+				{
+					log("--- Waited %d ---\n", (400-waitTimeMax) * 10);
+					waitTimeMax = autoextraWaitAfterReachingSpeed;
+				}
+				if (waitTimeMax == 0)
+					log("--- Voltage-based --- \n");
+			} else {
+				int voltage = speed * 126;
+				if (vel < speed)
+					voltage += 30 * (speed - vel);
 
-			FlyWheel1.move_voltage(-voltage);
-			Intake.move_voltage(-voltage);
+				// Max is +-12,000
+				if (voltage >= 12000)
+					voltage = 12000;
 
-			printf("%.1f %d\n", vel, voltage);
+				// printf("%.1f\n", vel);
+				counter++;
+				speedsum += vel;
+
+				FlyWheel1.move_voltage(-voltage);
+				Intake.move_voltage(-voltage);
+			}
+
+			// settlement period - just wait, so specific action
+			if (waitTimeMax == 0 && settlementTime > 0)
+			{
+				log("%.1f\n", vel);
+				settlementTime--;
+				if (settlementTime == 0)
+					log("---- Shoot! ---\n");
+			}
+
+			// shooting
+			if (settlementTime == 0 && pistonExtendedTime > 0) {
+				pistonExtendedTime--;
+				pros::c::adi_digital_write(ShootPort, HIGH);
+				log("%.1f\n", vel);
+			}
+
+			if (pistonExtendedTime == 0)
+				break;
+
 			pros::c::delay(10);
 		}
 
+		printf("%.2f\n", speedsum / counter);
+
 		SetFlywheelVelocity(speed);
-		ShootDisk();
+		pros::c::adi_digital_write(ShootPort, LOW);
+		log("\n\n");
 	}
 
 	void SetDrive(int Lspeed, int Rspeed)
@@ -479,8 +512,6 @@ public:
 		const int defaultFlyWheelSpeed = -65;
 		int FlyWheelSpeed = defaultFlyWheelSpeed;
 		int FlyWheelOn = 0;
-
-		ShootDiskAccurate(84);
 
 		while (true)
 		{
