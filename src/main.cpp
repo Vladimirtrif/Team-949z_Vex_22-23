@@ -416,14 +416,14 @@ public:
 		// prep flywheel
 		SetFlywheelVelocity(83);
 
-		Turn(24, 100);
+		Turn(23.5, 100);
 		pros::c::delay(300);
 
 		ShootDiskAccurate(83);
 
 		ShootDiskAccurate(89);
 
-		Turn(61, 100);
+		Turn(61.5, 100);
 		pros::c::delay(1000);
 
 		Move(470, 100, 100, 3000);
