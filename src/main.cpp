@@ -461,10 +461,10 @@ public:
 
 		ShootDiskAccurate_old(82, 2000);
 
-		ShootDiskAccurate_old(84, 500);
+		ShootDiskAccurate_old(84, 1000);
 
 		SetRollerVelocity(90);
-
+	
 		Turn(13.5, 100);
 		pros::c::delay(200);
 
