@@ -37,7 +37,7 @@ enum AutonMode {
 	AutonSkills = 3,
 };
 
-AutonMode autonSide = AutonRight;
+AutonMode autonSide = AutonLeft;
 
 void printAutonMessage() {
 	if (autonSide == AutonLeft)
@@ -368,25 +368,48 @@ private:
 public:
 	void runLeft() {
 		// prep flywheel
-		SetFlywheelVelocity(84);
+		SetFlywheelVelocity(79);
 
 		Turn(-13.5, 100);
 		pros::c::delay(200);
 
-		ShootDiskAccurate(84);
+		ShootDiskAccurate(79);
 
-		ShootDiskAccurate(84);
+		ShootDiskAccurate(80);
 
 		SetRollerVelocity(90);
 
 		Turn(13.5, 100);
-		pros::c::delay(250);
+		pros::c::delay(200);
 
 		Move(140, -70, -70, 350);
 		pros::c::delay(50);
 
 		Move(100, 100, 100, 1000);
 		pros::c::delay(50);
+
+		Turn(50, 100);
+		pros::c::delay(250);
+
+		SetFlywheelVelocity(66);
+		pros::c::delay(75);
+
+		Move(600, 50, 50, 2000);
+		pros::c::delay(50);
+
+		Move(600, 40, 40, 3000);
+		pros::c::delay(50);
+
+		Turn(-66, 100);
+		pros::c::delay(250);
+
+		ShootDiskAccurate(79);
+
+		ShootDiskAccurate(79);
+
+		ShootDiskAccurate(79);
+
+
 	}
 
 	void runRight() {
@@ -509,7 +532,7 @@ public:
 	#endif
 
 		int dead_Zone = 10; // the dead zone for the joysticks
-		const int defaultFlyWheelSpeed = -65;
+		const int defaultFlyWheelSpeed = -66;
 		int FlyWheelSpeed = defaultFlyWheelSpeed;
 		int FlyWheelOn = 0;
 
