@@ -557,7 +557,7 @@ public:
 	#endif
 
 		int dead_Zone = 10; // the dead zone for the joysticks
-		const int defaultFlyWheelSpeed = -66;
+		const int defaultFlyWheelSpeed = -65;
 		int FlyWheelSpeed = defaultFlyWheelSpeed;
 		int FlyWheelOn = 0;
 
