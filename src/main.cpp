@@ -157,10 +157,10 @@ public:
 		Intake.move_velocity(-speed);
 	}
 
-	void ShootDiskAccurate_old(unsigned int speed)
+	void ShootDiskAccurate_old(unsigned int speed, int delay)
 	{
         SetFlywheelVelocity(speed);
-        pros::c::delay(2000);
+        pros::c::delay(delay);
 
         for (int i = 0; i < 200; i++) {
             auto vel = getFlywheelVelocity();
@@ -368,14 +368,23 @@ private:
 public:
 	void runLeft() {
 		// prep flywheel
-		SetFlywheelVelocity(79);
+		/*SetFlywheelVelocity(79);
 
 		Turn(-13.5, 100);
 		pros::c::delay(200);
 
 		ShootDiskAccurate(79);
 
-		ShootDiskAccurate(80);
+		ShootDiskAccurate(80);*/
+
+		SetFlywheelVelocity(82);
+
+		Turn(-13.5, 100);
+		pros::c::delay(200);
+
+		ShootDiskAccurate_old(82, 2000);
+
+		ShootDiskAccurate_old(84, 1000);
 
 		SetRollerVelocity(90);
 
@@ -445,14 +454,14 @@ public:
 	void runSkills() {
 		// prep flywheel
 		
-		SetFlywheelVelocity(79);
+		SetFlywheelVelocity(82);
 
 		Turn(-13.5, 100);
 		pros::c::delay(200);
 
-		ShootDiskAccurate(79);
+		ShootDiskAccurate_old(82, 2000);
 
-		ShootDiskAccurate(80);
+		ShootDiskAccurate_old(84, 500);
 
 		SetRollerVelocity(90);
 
@@ -677,7 +686,6 @@ public:
 			{
 				pros::c::adi_digital_write(expansionPort, HIGH);
 				pros::c::adi_digital_write(expansionPort2, HIGH);
-				pros::c::delay(500);
 			}
 
 			pros::delay(10);
