@@ -444,20 +444,20 @@ public:
 
 	void runSkills() {
 		// prep flywheel
-		SetFlywheelVelocity(87);
+		
+		SetFlywheelVelocity(79);
 
-		Turn(-6, 100);
+		Turn(-13.5, 100);
 		pros::c::delay(200);
 
-		ShootDiskAccurate(87);
+		ShootDiskAccurate(79);
 
-		ShootDiskAccurate(87);
-
-		Turn(6, 100);
-		pros::c::delay(400);
+		ShootDiskAccurate(80);
 
 		SetRollerVelocity(90);
-		pros::c::delay(250);
+
+		Turn(13.5, 100);
+		pros::c::delay(200);
 
 		Move(175, -70, -70, 1000);
 		pros::c::delay(200);
@@ -465,9 +465,34 @@ public:
 		Move(100, 100, 100, 1000);
 		pros::c::delay(50);
 
+		Turn(50, 100);
+		pros::c::delay(250);
+
+		SetFlywheelVelocity(66);
+		pros::c::delay(75);
+
+		Move(600, 50, 50, 2000);
+		pros::c::delay(50);
+
+		Move(600, 40, 40, 3000);
+		pros::c::delay(50);
+
+		Turn(-66, 100);
+		pros::c::delay(250);
+
+		ShootDiskAccurate(79);
+
+		ShootDiskAccurate(79);
+
+		ShootDiskAccurate(79);
+
 		SetRollerVelocity(0);
-		Turn(20, 100);
-		pros::c::delay(750);
+
+		Turn(66, 100);
+		pros::c::delay(250);
+
+		Move(1200, -50, -50, 4000);
+		pros::c::delay(50);
 
 		pros::c::adi_digital_write(expansionPort2, HIGH);
 		pros::c::adi_digital_write(expansionPort, HIGH);
