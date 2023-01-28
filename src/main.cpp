@@ -35,6 +35,7 @@ enum AutonMode {
 	AutonLeft = 1,
 	AutonRight = 2,
 	AutonSkills = 3,
+	AutonNone = 0,
 };
 
 AutonMode autonSide = AutonLeft;
@@ -51,6 +52,10 @@ void printAutonMessage() {
 	if (autonSide == AutonSkills)
 	{
 		pros::lcd::set_text(1, "Selected Auton is Skills");
+	}
+	if (autonSide == AutonNone)
+	{
+		pros::lcd::set_text(1, "Selected Auton is None");
 	}
 }
 
