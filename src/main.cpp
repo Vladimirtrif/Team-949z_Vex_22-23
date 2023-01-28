@@ -104,7 +104,7 @@ protected:
 	pros::Motor right_back{RightBackPort};
 
 	// Should be E_MOTOR_GEARSET_06 - 600 rpm
-	pros::Motor FlyWheel1{fly_wheel1, MOTOR_GEARSET_36, true}; // Pick correct gearset (36 is red)
+	pros::Motor FlyWheel1{fly_wheel1, MOTOR_GEARSET_36, false}; // Pick correct gearset (36 is red)
 	pros::Motor Intake{intake, MOTOR_GEARSET_36, true};		   // Pick correct gearset (36 is red)
 #ifdef VISION_ENABLED
 	pros::Vision vision_sensor{VisionPort, pros::E_VISION_ZERO_CENTER};
@@ -262,7 +262,38 @@ public:
 		right_middle.move(Rspeed);
 		right_back.move(-Rspeed);
 	}
-};
+}; 
+	/*
+float Kp = 0.2;
+float Kd = 0.0;
+float Ki = 0.0;
+int targetVelocity = 0;
+
+	int shootPID() {
+		while() {
+			lastError = currentVelocity;
+
+			float error = targetVelocity - getFlywheelVelocity()();
+			float deltaT = ;
+			
+			float P = error * Kp
+
+			float I += error * deltaT * Ki
+
+			float D = ((currentVelocity - lastVelocity) / deltaT) * Kd;
+
+			int output = P + I - D;
+
+
+		}
+	}
+	
+	int drivePID() {
+		while() {
+
+		}
+	}*/
+
 
 
 /**
@@ -377,27 +408,27 @@ public:
 
 		ShootDiskAccurate(80);*/
 
-		SetFlywheelVelocity(82);
+		/*SetFlywheelVelocity(82.5);
 
 		Turn(-13.5, 100);
 		pros::c::delay(200);
 
-		ShootDiskAccurate_old(82, 2000);
+		ShootDiskAccurate_old(82.5, 2000);
 
-		ShootDiskAccurate_old(84, 1000);
+		ShootDiskAccurate_old(84, 1000);*/
 
 		SetRollerVelocity(90);
 
-		Turn(13.5, 100);
-		pros::c::delay(200);
+		/*Turn(13.5, 100);
+		pros::c::delay(200);*/
 
-		Move(140, -70, -70, 350);
+		Move(160, -70, -70, 350);
 		pros::c::delay(50);
 
 		Move(100, 100, 100, 1000);
 		pros::c::delay(50);
 
-		Turn(50, 100);
+		/*Turn(50, 100);
 		pros::c::delay(250);
 
 		SetFlywheelVelocity(66);
@@ -416,21 +447,21 @@ public:
 
 		ShootDiskAccurate(79);
 
-		ShootDiskAccurate(79);
+		ShootDiskAccurate(79);*/
 
 
 	}
 
 	void runRight() {
 		// prep flywheel
-		SetFlywheelVelocity(83);
+		//SetFlywheelVelocity(83);
 
 		Turn(23.5, 100);
 		pros::c::delay(300);
 
-		ShootDiskAccurate(83);
+		//ShootDiskAccurate(83);
 
-		ShootDiskAccurate(89);
+		//ShootDiskAccurate(89);
 
 		Turn(61.5, 100);
 		pros::c::delay(1000);
@@ -454,7 +485,7 @@ public:
 	void runSkills() {
 		// prep flywheel
 		
-		SetFlywheelVelocity(82);
+		/*SetFlywheelVelocity(82);
 
 		Turn(-13.5, 100);
 		pros::c::delay(200);
@@ -468,7 +499,7 @@ public:
 		Turn(13.5, 100);
 		pros::c::delay(200);
 
-		Move(175, -70, -70, 1000);
+		Move(180, -70, -70, 1000);
 		pros::c::delay(200);
 
 		Move(100, 100, 100, 1000);
@@ -487,21 +518,25 @@ public:
 		pros::c::delay(50);
 
 		Turn(-66, 100);
-		pros::c::delay(250);
+		pros::c::delay(350);
 
 		ShootDiskAccurate(79);
+		pros::c::delay(50);
 
 		ShootDiskAccurate(79);
+		pros::c::delay(50);
 
 		ShootDiskAccurate(79);
+		pros::c::delay(50);
 
 		SetRollerVelocity(0);
+		pros::c::delay(100);
 
 		Turn(66, 100);
-		pros::c::delay(250);
+		pros::c::delay(400);
 
 		Move(1200, -50, -50, 4000);
-		pros::c::delay(50);
+		pros::c::delay(100);*/
 
 		pros::c::adi_digital_write(expansionPort2, HIGH);
 		pros::c::adi_digital_write(expansionPort, HIGH);
