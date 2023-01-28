@@ -109,7 +109,7 @@ protected:
 	pros::Motor right_back{RightBackPort};
 
 	// Should be E_MOTOR_GEARSET_06 - 600 rpm
-	pros::Motor FlyWheel1{fly_wheel1, MOTOR_GEARSET_36, false}; // Pick correct gearset (36 is red)
+	pros::Motor FlyWheel1{fly_wheel1, MOTOR_GEARSET_36, true}; // Pick correct gearset (36 is red)
 	pros::Motor Intake{intake, MOTOR_GEARSET_36, true};		   // Pick correct gearset (36 is red)
 #ifdef VISION_ENABLED
 	pros::Vision vision_sensor{VisionPort, pros::E_VISION_ZERO_CENTER};
@@ -685,18 +685,19 @@ public:
 			/**
 			 * Flywheel
 			*/
-			// Roller, flywheel is not powered
+			// Flywheel is on low setting
 			if (master.get_digital_new_press(DIGITAL_A))
 			{
 				FlyWheelSpeed = defaultFlyWheelSpeed;
 			}
 
-			// Flywheel is powered, low setting
+			// Flywheel is powered, reverse
 			if (master.get_digital_new_press(DIGITAL_Y))
 			{
 				FlyWheelSpeed = -defaultFlyWheelSpeed;
 			}
 
+			//Flywheel is stopped
 			if (master.get_digital_new_press(DIGITAL_B))
 			{
 				FlyWheelSpeed = 0;
