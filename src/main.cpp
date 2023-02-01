@@ -162,9 +162,29 @@ public:
 		Intake.move_velocity(-speed);
 	}
 
+	void SetFlywheelVoltage(unsigned int voltage)
+	{
+		FlyWheel1.move_voltage(-voltage);
+		Intake.move_velocity(-voltage);
+	}
+
 	void ShootDiskAccurate_old(unsigned int speed, int delay)
 	{
         SetFlywheelVelocity(speed);
+        pros::c::delay(delay);
+
+        for (int i = 0; i < 200; i++) {
+            auto vel = getFlywheelVelocity();
+
+            log("%.1f\n", vel);
+            pros::c::delay(10);
+        }
+        ShootDisk();
+	}
+
+	void ShootDiskAccurate_voltage(unsigned int voltage, int delay)
+	{
+        SetFlywheelVoltage(voltage);
         pros::c::delay(delay);
 
         for (int i = 0; i < 200; i++) {
@@ -413,21 +433,26 @@ public:
 
 		ShootDiskAccurate(80);*/
 
-		/*SetFlywheelVelocity(82.5);
+		//SetFlywheelVelocity(88);
+		SetFlywheelVoltage(5500);
 
-		Turn(-13.5, 100);
-		pros::c::delay(200);
+		Turn(-17.7, 100);
+		pros::c::delay(1000);
 
-		ShootDiskAccurate_old(82.5, 2000);
+		/*ShootDiskAccurate_old(88, 2000);
 
-		ShootDiskAccurate_old(84, 1000);*/
+		ShootDiskAccurate_old(88, 1000);*/
+
+		ShootDiskAccurate_voltage(8280, 2000);
+
+		ShootDiskAccurate_voltage(8280, 1000);
 
 		SetRollerVelocity(90);
 
-		/*Turn(13.5, 100);
-		pros::c::delay(200);*/
+		Turn(17.7, 100);
+		pros::c::delay(200);
 
-		Move(160, -70, -70, 350);
+		Move(175, -70, -70, 350);
 		pros::c::delay(50);
 
 		Move(100, 100, 100, 1000);
@@ -606,7 +631,7 @@ public:
 	#endif
 
 		int dead_Zone = 10; // the dead zone for the joysticks
-		const int defaultFlyWheelSpeed = -65;
+		const int defaultFlyWheelSpeed = -75;
 		int FlyWheelSpeed = defaultFlyWheelSpeed;
 		int FlyWheelOn = 0;
 
@@ -706,7 +731,7 @@ public:
 			// Flywheel speed is high
 			if (master.get_digital_new_press(DIGITAL_X))
 			{
-				FlyWheelSpeed = -100;
+				FlyWheelSpeed = -90;
 			}
 
 			FlyWheel1.move_velocity(FlyWheelSpeed);
