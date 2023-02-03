@@ -187,12 +187,6 @@ public:
         SetFlywheelVoltage(voltage);
         pros::c::delay(delay);
 
-        for (int i = 0; i < 200; i++) {
-            auto vel = getFlywheelVelocity();
-
-            log("%.1f\n", vel);
-            pros::c::delay(10);
-        }
         ShootDisk();
 	}
 
@@ -424,33 +418,26 @@ private:
 public:
 	void runLeft() {
 		// prep flywheel
-		/*SetFlywheelVelocity(79);
-
-		Turn(-13.5, 100);
-		pros::c::delay(200);
-
-		ShootDiskAccurate(79);
-
-		ShootDiskAccurate(80);*/
 
 		//SetFlywheelVelocity(88);
-		SetFlywheelVoltage(5500);
+		SetFlywheelVoltage(8300);
+		pros::c::delay(350);
 
-		Turn(-17.7, 100);
-		pros::c::delay(1000);
+		Turn(-18, 100);
+		pros::c::delay(200);
 
 		/*ShootDiskAccurate_old(88, 2000);
 
 		ShootDiskAccurate_old(88, 1000);*/
 
-		ShootDiskAccurate_voltage(8280, 2000);
+		ShootDiskAccurate_voltage(8300, 2000);
 
-		ShootDiskAccurate_voltage(8280, 1000);
+		ShootDiskAccurate_voltage(8300, 1000);
 
 		SetRollerVelocity(90);
 
-		Turn(17.7, 100);
-		pros::c::delay(200);
+		Turn(18, 100);
+		pros::c::delay(250);
 
 		Move(175, -70, -70, 350);
 		pros::c::delay(50);
@@ -458,10 +445,10 @@ public:
 		Move(100, 100, 100, 1000);
 		pros::c::delay(50);
 
-		/*Turn(50, 100);
+		Turn(40, 100);
 		pros::c::delay(250);
 
-		SetFlywheelVelocity(66);
+		SetFlywheelVoltage(7500);
 		pros::c::delay(75);
 
 		Move(600, 50, 50, 2000);
@@ -470,10 +457,16 @@ public:
 		Move(600, 40, 40, 3000);
 		pros::c::delay(50);
 
-		Turn(-66, 100);
-		pros::c::delay(250);
+		Turn(-67, 100);
+		pros::c::delay(350);
 
-		ShootDiskAccurate(79);
+		ShootDiskAccurate_voltage(7500, 1000);
+
+		ShootDiskAccurate_voltage(7500, 1000);
+
+		ShootDiskAccurate_voltage(7500, 1000);
+
+		/*ShootDiskAccurate(79);
 
 		ShootDiskAccurate(79);
 
@@ -484,14 +477,14 @@ public:
 
 	void runRight() {
 		// prep flywheel
-		//SetFlywheelVelocity(83);
+		SetFlywheelVelocity(83);
 
 		Turn(23.5, 100);
 		pros::c::delay(300);
 
-		//ShootDiskAccurate(83);
+		ShootDiskAccurate(83);
 
-		//ShootDiskAccurate(89);
+		ShootDiskAccurate(89);
 
 		Turn(61.5, 100);
 		pros::c::delay(1000);
