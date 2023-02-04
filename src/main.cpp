@@ -1,6 +1,7 @@
 #include "main.h"
 #include "pros/adi.h"
 #include "pros/llemu.hpp"
+#include "pros/rotation.hpp"
 
 // #define VISION_ENABLED
 #ifdef VISION_ENABLED
@@ -111,6 +112,9 @@ protected:
 	// Should be E_MOTOR_GEARSET_06 - 600 rpm
 	pros::Motor FlyWheel1{fly_wheel1, MOTOR_GEARSET_36, true}; // Pick correct gearset (36 is red)
 	pros::Motor Intake{intake, MOTOR_GEARSET_36, true};		   // Pick correct gearset (36 is red)
+
+	pros::Rotation FlyWheelSensor{FlyWheelSensorPort};
+
 #ifdef VISION_ENABLED
 	pros::Vision vision_sensor{VisionPort, pros::E_VISION_ZERO_CENTER};
 #endif
@@ -145,9 +149,9 @@ public:
 		pros::c::delay(250);
 	}
 
-	double getFlywheelVelocity()
+	auto getFlywheelVelocity()
 	{
-		return -(FlyWheel1.get_actual_velocity() + Intake.get_actual_velocity()) / 2;
+		return -FlyWheelSensor.get_velocity();
 	}
 
 	void SetRollerVelocity(unsigned int speed)
@@ -162,114 +166,82 @@ public:
 		Intake.move_velocity(-speed);
 	}
 
-	void SetFlywheelVoltage(unsigned int voltage)
+	void SetFlywheelVoltageCore(unsigned int voltage)
 	{
 		FlyWheel1.move_voltage(-voltage);
 		Intake.move_velocity(-voltage);
 	}
 
-	void ShootDiskAccurate_old(unsigned int speed, int delay)
-	{
-        SetFlywheelVelocity(speed);
-        pros::c::delay(delay);
-
-        for (int i = 0; i < 200; i++) {
-            auto vel = getFlywheelVelocity();
-
-            log("%.1f\n", vel);
-            pros::c::delay(10);
-        }
-        ShootDisk();
-	}
-
 	void ShootDiskAccurate_voltage(unsigned int voltage, int delay)
 	{
-        SetFlywheelVoltage(voltage);
+        SetFlywheelVoltageCore(voltage);
         pros::c::delay(delay);
 
         ShootDisk();
 	}
 
-	void ShootDiskAccurate(unsigned int speed)
+	unsigned int _flywheelTargetVoltage = 0;
+	int _flywheelVelocity = 0;
+	int _flywheelVelocityDiff = 0;
+
+	void SetFlyWheelTargetVoltage(unsigned int targetVoltage) {
+		_flywheelTargetVoltage = targetVoltage;
+		SetFlywheelVoltageCore(targetVoltage);
+
+		// ensure we will not exit early because flywheel is slowing down at the start
+		_flywheelVelocityDiff = 10;
+		_flywheelVelocity = getFlywheelVelocity();
+}
+
+	void FlyWheelCycle()
 	{
-		// max time we wait for flywehee to reach desired speed, using SetFlywheelVelocity() flow
-		auto waitTimeMax = 400;
-		// If speed is achieved sooner than above timeout, we wait extra 20 cycles before switching
-		// to waiting using voltage-based algorithm 
-		auto autoextraWaitAfterReachingSpeed = 70;
-		// Time we wait using voltage-setting algorithm
-		auto settlementTime = 180;
-		// amount of time we wait after extending piston before retrieving it back
-		auto pistonExtendedTime = 40;
+		unsigned int targetSpeed = _flywheelTargetVoltage / 0.62 - 1286;
+		// int _flywheelTargetVoltage = (targetSpeed + 1286) * 0.62;
 
-		SetFlywheelVelocity(speed);
+		int velCurr = getFlywheelVelocity();
+		int velLast = _flywheelVelocity;
+		_flywheelVelocity = _flywheelVelocity * 0.85 + 0.15 * velCurr;
+		_flywheelVelocityDiff = _flywheelVelocityDiff * 0.9 + 0.1 * (_flywheelVelocity - velLast);
 
-		unsigned int counter = 0;
-		double speedsum = 0;
+		int distance = targetSpeed - _flywheelVelocity;
 
-		while (true) {
+		unsigned int power = _flywheelTargetVoltage;
+		if (distance > 0) {
+			power += distance / 50;
+		}
 
-			// Further out we are - the more voltage we need to faster get there
-			// But once we reach the speed, we need some power to simply maintain momentum
-			auto vel = getFlywheelVelocity();
+		SetFlywheelVoltageCore(power);
 
-			// Are we still waiting for flywheel to speed up?
-			if (waitTimeMax > 0)
-			{
-				waitTimeMax--;
-				// if we reached desired speed, we are moving to settlement period
-				// But give it 200ms to work through with velocity-based algorithm
-				if (vel >= speed && waitTimeMax >= autoextraWaitAfterReachingSpeed)
-				{
-					log("--- Waited %d ---\n", (400-waitTimeMax) * 10);
-					waitTimeMax = autoextraWaitAfterReachingSpeed;
-				}
-				if (waitTimeMax == 0)
-					log("--- Voltage-based --- \n");
-			} else {
-				int voltage = speed * 126;
-				if (vel < speed)
-					voltage += 30 * (speed - vel);
+		log("%d %d %d\n", velCurr, power, _flywheelVelocityDiff);
+	}
 
-				// Max is +-12,000
-				if (voltage >= 12000)
-					voltage = 12000;
+	// Maintains flywheel speed
+	void delay(unsigned int time)
+	{
+		for (int i = 0; i < time / 10; i++) {
+			FlyWheelCycle();
+			pros::c::delay(10);
+		}
+	}
 
-				// printf("%.1f\n", vel);
-				counter++;
-				speedsum += vel;
+	void ShootDiskAccurate()
+	{	
+		delay(100);
 
-				FlyWheel1.move_voltage(-voltage);
-				Intake.move_voltage(-voltage);
-			}
-
-			// settlement period - just wait, so specific action
-			if (waitTimeMax == 0 && settlementTime > 0)
-			{
-				log("%.1f\n", vel);
-				settlementTime--;
-				if (settlementTime == 0)
-					log("---- Shoot! ---\n");
-			}
-
-			// shooting
-			if (settlementTime == 0 && pistonExtendedTime > 0) {
-				pistonExtendedTime--;
-				pros::c::adi_digital_write(ShootPort, HIGH);
-				log("%.1f\n", vel);
-			}
-
-			if (pistonExtendedTime == 0)
-				break;
-
+		// if we see some slow down, that means we are at target (not growing) speed, start countdown
+		// do not bounce speeds, just maintain target speed and let time stabilize speed.
+		while (_flywheelVelocityDiff > -5) {
+			FlyWheelCycle();
 			pros::c::delay(10);
 		}
 
-		printf("%.2f\n", speedsum / counter);
+		delay(200);
 
-		SetFlywheelVelocity(speed);
+		pros::c::adi_digital_write(ShootPort, HIGH);
+		delay(300);
+
 		pros::c::adi_digital_write(ShootPort, LOW);
-		log("\n\n");
+		delay(300);
 	}
 
 	void SetDrive(int Lspeed, int Rspeed)
@@ -348,12 +320,12 @@ private:
 
 		while (abs(getPos() - startPos) < ticks && counter <= timeOut)
 		{
-			pros::c::delay(10);
+			delay(10);
 			counter = counter + 10;
 		}
 
 		SetDrive(0, 0);
-		pros::c::delay(100);
+		delay(100);
 	}
 
 	void Turn(double degrees, int speed)
@@ -386,7 +358,7 @@ private:
 				{
 					// Positive offset means goal is left due to sensor being mounted upside down
 					float offset = obj.x_middle_coord * sign(speed);
-					printf("%d  %d\n", obj.width, obj.top_coord + obj.height);
+					log("%d  %d\n", obj.width, obj.top_coord + obj.height);
 					if (abs(offset) > 0.05)
 					{
 						if (offset < 0)
@@ -419,155 +391,142 @@ public:
 	void runLeft() {
 		// prep flywheel
 
-		//SetFlywheelVelocity(88);
-		SetFlywheelVoltage(8300);
-		pros::c::delay(350);
+		SetFlyWheelTargetVoltage(8300);
+		delay(350);
 
 		Turn(-18, 100);
-		pros::c::delay(200);
+		delay(200);
 
 		/*ShootDiskAccurate_old(88, 2000);
 
 		ShootDiskAccurate_old(88, 1000);*/
 
-		ShootDiskAccurate_voltage(8300, 2000);
+		ShootDiskAccurate();
 
-		ShootDiskAccurate_voltage(8300, 1000);
+		ShootDiskAccurate();
 
 		SetRollerVelocity(90);
 
 		Turn(18, 100);
-		pros::c::delay(250);
+		delay(250);
 
 		Move(175, -70, -70, 350);
-		pros::c::delay(50);
+		delay(50);
 
 		Move(100, 100, 100, 1000);
-		pros::c::delay(50);
+		delay(50);
 
 		Turn(40, 100);
-		pros::c::delay(250);
+		delay(250);
 
-		SetFlywheelVoltage(7500);
-		pros::c::delay(75);
+		SetFlyWheelTargetVoltage(7500);
+		delay(75);
 
 		Move(600, 50, 50, 2000);
-		pros::c::delay(50);
+		delay(50);
 
 		Move(600, 40, 40, 3000);
-		pros::c::delay(50);
+		delay(50);
 
 		Turn(-67, 100);
-		pros::c::delay(350);
+		delay(350);
 
-		ShootDiskAccurate_voltage(7500, 1000);
+		ShootDiskAccurate();
 
-		ShootDiskAccurate_voltage(7500, 1000);
+		ShootDiskAccurate();
 
-		ShootDiskAccurate_voltage(7500, 1000);
-
-		/*ShootDiskAccurate(79);
-
-		ShootDiskAccurate(79);
-
-		ShootDiskAccurate(79);*/
-
-
+		ShootDiskAccurate();
 	}
 
 	void runRight() {
 		// prep flywheel
-		/*SetFlywheelVoltage(9751);
-		pros::c::delay(500);
+		/*SetFlyWheelTargetVoltage(9751);
+		delay(500);
 
 
 		Turn(19.5, 100);
-		pros::c::delay(350);
+		delay(350);
 
-		ShootDiskAccurate_voltage(9751, 2000);
+		ShootDiskAccurate();
 
-		ShootDiskAccurate_voltage(9751, 2000);
+		ShootDiskAccurate();
 
 		Turn(65.5, 100);
-		pros::c::delay(750);
+		delay(750);
 
 		Move(275, 100, 100, 3000);
-		pros::c::delay(500);
+		delay(500);
 
 		Turn(-75, 100);
-		pros::c::delay(450);
+		delay(450);
 
 		SetRollerVelocity(90);
-		pros::c::delay(250);
+		delay(250);
 
 		Move(140, -70, -70, 400);
-		pros::c::delay(50);
+		delay(50);
 
 		Move(70, 100, 100, 10000);
-		pros::c::delay(50);
+		delay(50);
 
 		Turn(-45.5, 100);
-		pros::c::delay(500);
+		delay(500);
 
-		SetFlywheelVoltage(7500);
-		pros::c::delay(75);
+		SetFlyWheelTargetVoltage(7500);
+		delay(75);
 
 		Move(1800, 100, 100, 10000);
-		pros::c::delay(200);
+		delay(200);
 
 		Turn(88, 100);
-		pros::c::delay(500);
+		delay(500);
 
-		ShootDiskAccurate_voltage(7520, 2000);
+		ShootDiskAccurate();
 
-		ShootDiskAccurate_voltage(7520, 2000);
+		ShootDiskAccurate();
 
-		ShootDiskAccurate_voltage(7520, 2000);*/
+		ShootDiskAccurate();*/
 
-		SetFlywheelVoltage(9200);
-		pros::c::delay(500);
+		SetFlyWheelTargetVoltage(9100);
+		delay(500);
 
 		Move(350, 100, 100, 3000);
-		pros::c::delay(1000);
+		delay(1000);
 
 		Turn(23.5, 100);
-		pros::c::delay(1000);
+		delay(1000);
 
-		ShootDiskAccurate_voltage(9100, 2000);
+		ShootDiskAccurate();
 
-		ShootDiskAccurate_voltage(9100, 2000);
+		ShootDiskAccurate();
 
-		ShootDiskAccurate_voltage(9100, 2000);
+		ShootDiskAccurate();
+
+		SetFlyWheelTargetVoltage(8000);
 
 		Turn(-69.5, 100);
-		pros::c::delay(1000);
+		delay(1000);
 
 		Move(650, 100, 100, 3000);
-		pros::c::delay(1000);
+		delay(1000);
 
 		Turn(87.5, 100);
-		pros::c::delay(1000);
+		delay(1000);
 
-		ShootDiskAccurate_voltage(8000, 2000);
+		ShootDiskAccurate();
 
-		ShootDiskAccurate_voltage(8000, 2000);
+		ShootDiskAccurate();
 
 		Turn(-82.5, 100);
-		pros::c::delay(1000);
+		delay(1000);
 
 		SetRollerVelocity(90);
 
 		Move(2000, -120, -120, 3000);
-		pros::c::delay(1000);
+		delay(1000);
 
 		Move(200, 100, 100, 3000);
-		pros::c::delay(1000);
-
-
-
-
-
-
+		delay(1000);
 	}
 
 	void runSkills() {
@@ -576,7 +535,7 @@ public:
 		/*SetFlywheelVelocity(82);
 
 		Turn(-13.5, 100);
-		pros::c::delay(200);
+		delay(200);
 
 		ShootDiskAccurate_old(82, 2000);
 
@@ -585,46 +544,46 @@ public:
 		SetRollerVelocity(90);
 	
 		Turn(13.5, 100);
-		pros::c::delay(200);
+		delay(200);
 
 		Move(180, -70, -70, 1000);
-		pros::c::delay(200);
+		delay(200);
 
 		Move(100, 100, 100, 1000);
-		pros::c::delay(50);
+		delay(50);
 
 		Turn(50, 100);
-		pros::c::delay(250);
+		delay(250);
 
 		SetFlywheelVelocity(66);
-		pros::c::delay(75);
+		delay(75);
 
 		Move(600, 50, 50, 2000);
-		pros::c::delay(50);
+		delay(50);
 
 		Move(600, 40, 40, 3000);
-		pros::c::delay(50);
+		delay(50);
 
 		Turn(-66, 100);
-		pros::c::delay(350);
+		delay(350);
 
 		ShootDiskAccurate(79);
-		pros::c::delay(50);
+		delay(50);
 
 		ShootDiskAccurate(79);
-		pros::c::delay(50);
+		delay(50);
 
 		ShootDiskAccurate(79);
-		pros::c::delay(50);
+		delay(50);
 
 		SetRollerVelocity(0);
-		pros::c::delay(100);
+		delay(100);
 
 		Turn(66, 100);
-		pros::c::delay(400);
+		delay(400);
 
 		Move(1200, -50, -50, 4000);
-		pros::c::delay(100);*/
+		delay(100);*/
 
 		pros::c::adi_digital_write(expansionPort2, HIGH);
 		pros::c::adi_digital_write(expansionPort, HIGH);
@@ -812,7 +771,7 @@ public:
 				pros::c::adi_digital_write(expansionPort2, HIGH);
 			}
 
-			pros::delay(10);
+			pros::c::delay(10);
 		}
 	}
 };

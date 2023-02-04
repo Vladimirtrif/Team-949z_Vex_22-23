@@ -70,6 +70,8 @@ void opcontrol(void);
 }
 #endif
 
+#define FlyWheelSensorPort 10
+
 #define LeftFrontPort 6
 #define LeftMiddlePort 7 //change to port that works
 #define LeftBackPort 11
