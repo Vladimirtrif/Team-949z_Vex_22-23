@@ -477,7 +477,7 @@ public:
 
 	void runRight() {
 		// prep flywheel
-		SetFlywheelVoltage(9751);
+		/*SetFlywheelVoltage(9751);
 		pros::c::delay(500);
 
 
@@ -522,7 +522,51 @@ public:
 
 		ShootDiskAccurate_voltage(7520, 2000);
 
-		ShootDiskAccurate_voltage(7520, 2000);
+		ShootDiskAccurate_voltage(7520, 2000);*/
+
+		SetFlywheelVoltage(9200);
+		pros::c::delay(500);
+
+		Move(350, 100, 100, 3000);
+		pros::c::delay(1000);
+
+		Turn(23.5, 100);
+		pros::c::delay(1000);
+
+		ShootDiskAccurate_voltage(9100, 2000);
+
+		ShootDiskAccurate_voltage(9100, 2000);
+
+		ShootDiskAccurate_voltage(9100, 2000);
+
+		Turn(-69.5, 100);
+		pros::c::delay(1000);
+
+		Move(650, 100, 100, 3000);
+		pros::c::delay(1000);
+
+		Turn(87.5, 100);
+		pros::c::delay(1000);
+
+		ShootDiskAccurate_voltage(8000, 2000);
+
+		ShootDiskAccurate_voltage(8000, 2000);
+
+		Turn(-82.5, 100);
+		pros::c::delay(1000);
+
+		SetRollerVelocity(90);
+
+		Move(2000, -120, -120, 3000);
+		pros::c::delay(1000);
+
+		Move(200, 100, 100, 3000);
+		pros::c::delay(1000);
+
+
+
+
+
 
 	}
 
