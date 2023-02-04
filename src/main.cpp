@@ -38,7 +38,7 @@ enum AutonMode {
 	AutonNone = 0,
 };
 
-AutonMode autonSide = AutonLeft;
+AutonMode autonSide = AutonRight;
 
 void printAutonMessage() {
 	if (autonSide == AutonLeft)
@@ -477,19 +477,21 @@ public:
 
 	void runRight() {
 		// prep flywheel
-		SetFlywheelVelocity(83);
+		SetFlywheelVoltage(9751);
+		pros::c::delay(500);
 
-		Turn(23.5, 100);
-		pros::c::delay(300);
 
-		ShootDiskAccurate(83);
+		Turn(19.5, 100);
+		pros::c::delay(350);
 
-		ShootDiskAccurate(89);
+		ShootDiskAccurate_voltage(9751, 2000);
 
-		Turn(61.5, 100);
-		pros::c::delay(1000);
+		ShootDiskAccurate_voltage(9751, 2000);
 
-		Move(470, 100, 100, 3000);
+		Turn(65.5, 100);
+		pros::c::delay(750);
+
+		Move(275, 100, 100, 3000);
 		pros::c::delay(500);
 
 		Turn(-75, 100);
@@ -501,8 +503,27 @@ public:
 		Move(140, -70, -70, 400);
 		pros::c::delay(50);
 
-		Move(50, 100, 100, 10000);
+		Move(70, 100, 100, 10000);
 		pros::c::delay(50);
+
+		Turn(-45.5, 100);
+		pros::c::delay(500);
+
+		SetFlywheelVoltage(7500);
+		pros::c::delay(75);
+
+		Move(1800, 100, 100, 10000);
+		pros::c::delay(200);
+
+		Turn(88, 100);
+		pros::c::delay(500);
+
+		ShootDiskAccurate_voltage(7520, 2000);
+
+		ShootDiskAccurate_voltage(7520, 2000);
+
+		ShootDiskAccurate_voltage(7520, 2000);
+
 	}
 
 	void runSkills() {
@@ -624,7 +645,7 @@ public:
 	#endif
 
 		int dead_Zone = 10; // the dead zone for the joysticks
-		const int defaultFlyWheelSpeed = -75;
+		const int defaultFlyWheelSpeed = -59;
 		int FlyWheelSpeed = defaultFlyWheelSpeed;
 		int FlyWheelOn = 0;
 
@@ -724,7 +745,7 @@ public:
 			// Flywheel speed is high
 			if (master.get_digital_new_press(DIGITAL_X))
 			{
-				FlyWheelSpeed = -90;
+				FlyWheelSpeed = -67;
 			}
 
 			FlyWheel1.move_velocity(FlyWheelSpeed);
