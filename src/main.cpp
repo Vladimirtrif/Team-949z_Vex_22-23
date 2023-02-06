@@ -525,49 +525,47 @@ public:
 		ShootDiskAccurate_voltage(7520, 2000);*/
 
 		SetFlywheelVoltage(9200);
-		pros::c::delay(500);
 
 		Move(350, 100, 100, 3000);
-		pros::c::delay(1000);
+		pros::c::delay(500);
 
 		Turn(23.5, 100);
-		pros::c::delay(1000);
-
+	
 		ShootDiskAccurate_voltage(9100, 2000);
 
-		ShootDiskAccurate_voltage(9100, 2000);
+		ShootDiskAccurate_voltage(9100, 1000);
 
-		ShootDiskAccurate_voltage(9100, 2000);
+		ShootDiskAccurate_voltage(9100, 1000);
 
-		Turn(-69.5, 100);
+		// prep for future shots & disk pick up
+		SetFlywheelVoltage(9100);
+
+		// turn towards 3 disks
+		Turn(-69.5, 75);
 		pros::c::delay(1000);
 
-		Move(650, 100, 100, 3000);
+		// pick up 3 disks
+		Move(700, 100, 100, 3000);
+		pros::c::delay(500);
+
+		// Move backwards toward roller
+		Move(1400, -120, -120, 3000);
+		pros::c::delay(500);
+
+		// turn towards roller
+		Turn(55, 100);
 		pros::c::delay(1000);
 
-		Turn(87.5, 100);
-		pros::c::delay(1000);
-
-		ShootDiskAccurate_voltage(8000, 2000);
-
-		ShootDiskAccurate_voltage(8000, 2000);
-
-		Turn(-82.5, 100);
-		pros::c::delay(1000);
-
+		// turn roller
 		SetRollerVelocity(90);
+		Move(130, -100, -100, 1000);
+		pros::c::delay(500);
 
-		Move(2000, -120, -120, 3000);
-		pros::c::delay(1000);
+		// move out, prep to shoot
+		Move(50, 100, 100, 400);
 
-		Move(200, 100, 100, 3000);
-		pros::c::delay(1000);
-
-
-
-
-
-
+		ShootDiskAccurate_voltage(9100, 1000);
+		ShootDiskAccurate_voltage(9100, 1000);
 	}
 
 	void runSkills() {
