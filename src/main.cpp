@@ -38,7 +38,7 @@ enum AutonMode {
 	AutonNone = 0,
 };
 
-AutonMode autonSide = AutonRight;
+AutonMode autonSide = AutonLeft;
 
 void printAutonMessage() {
 	if (autonSide == AutonLeft)
@@ -419,47 +419,54 @@ public:
 	void runLeft() {
 		// prep flywheel
 
-		//SetFlywheelVelocity(88);
-		SetFlywheelVoltage(8300);
-		pros::c::delay(350);
+		//Set Flywheel Speed
+		SetFlywheelVoltage(8600);
+		pros::c::delay(400);
 
+		//Turn to aim at goal
 		Turn(-18, 100);
 		pros::c::delay(200);
 
-		/*ShootDiskAccurate_old(88, 2000);
+		//Shoot the two preloads
+		ShootDiskAccurate_voltage(8500, 2000);
 
-		ShootDiskAccurate_old(88, 1000);*/
+		ShootDiskAccurate_voltage(8500, 1000);
 
-		ShootDiskAccurate_voltage(8300, 2000);
-
-		ShootDiskAccurate_voltage(8300, 1000);
-
+		//Start Roller
 		SetRollerVelocity(90);
 
+		//Turn back to start
 		Turn(18, 100);
-		pros::c::delay(250);
+		pros::c::delay(200);
 
+
+		//Move back towards roller
 		Move(175, -70, -70, 350);
 		pros::c::delay(50);
 
+		//Move forwards from roller after it's turned
 		Move(100, 100, 100, 1000);
 		pros::c::delay(50);
 
-		Turn(40, 100);
+		//Turn towards stack of discs
+		Turn(70, 100);
 		pros::c::delay(250);
 
-		SetFlywheelVoltage(7500);
+		SetFlywheelVoltage(8000);
 		pros::c::delay(75);
 
-		Move(600, 50, 50, 2000);
+		//Pick up discs
+		Move(600, 100, 100, 2000);
 		pros::c::delay(50);
 
-		Move(600, 40, 40, 3000);
+		Move(600, 75, 75, 3000);
 		pros::c::delay(50);
 
-		Turn(-67, 100);
+		//Turn towards goal
+		Turn(-87, 100);
 		pros::c::delay(350);
 
+		//Shoot three discs
 		ShootDiskAccurate_voltage(7500, 1000);
 
 		ShootDiskAccurate_voltage(7500, 1000);
@@ -477,53 +484,6 @@ public:
 
 	void runRight() {
 		// prep flywheel
-		/*SetFlywheelVoltage(9751);
-		pros::c::delay(500);
-
-
-		Turn(19.5, 100);
-		pros::c::delay(350);
-
-		ShootDiskAccurate_voltage(9751, 2000);
-
-		ShootDiskAccurate_voltage(9751, 2000);
-
-		Turn(65.5, 100);
-		pros::c::delay(750);
-
-		Move(275, 100, 100, 3000);
-		pros::c::delay(500);
-
-		Turn(-75, 100);
-		pros::c::delay(450);
-
-		SetRollerVelocity(90);
-		pros::c::delay(250);
-
-		Move(140, -70, -70, 400);
-		pros::c::delay(50);
-
-		Move(70, 100, 100, 10000);
-		pros::c::delay(50);
-
-		Turn(-45.5, 100);
-		pros::c::delay(500);
-
-		SetFlywheelVoltage(7500);
-		pros::c::delay(75);
-
-		Move(1800, 100, 100, 10000);
-		pros::c::delay(200);
-
-		Turn(88, 100);
-		pros::c::delay(500);
-
-		ShootDiskAccurate_voltage(7520, 2000);
-
-		ShootDiskAccurate_voltage(7520, 2000);
-
-		ShootDiskAccurate_voltage(7520, 2000);*/
-
 		SetFlywheelVoltage(9200);
 
 		Move(350, 100, 100, 3000);
@@ -687,7 +647,7 @@ public:
 	#endif
 
 		int dead_Zone = 10; // the dead zone for the joysticks
-		const int defaultFlyWheelSpeed = -59;
+		const int defaultFlyWheelSpeed = -69;
 		int FlyWheelSpeed = defaultFlyWheelSpeed;
 		int FlyWheelOn = 0;
 
@@ -787,7 +747,7 @@ public:
 			// Flywheel speed is high
 			if (master.get_digital_new_press(DIGITAL_X))
 			{
-				FlyWheelSpeed = -67;
+				FlyWheelSpeed = -73;
 			}
 
 			FlyWheel1.move_velocity(FlyWheelSpeed);
