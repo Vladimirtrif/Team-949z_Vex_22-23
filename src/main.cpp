@@ -480,9 +480,9 @@ public:
 	
 		ShootDiskAccurate_voltage(9100, 2000);
 
-		ShootDiskAccurate_voltage(9100, 1000);
+		ShootDiskAccurate_voltage(9100, 1500);
 
-		ShootDiskAccurate_voltage(9100, 1000);
+		ShootDiskAccurate_voltage(9100, 1500);
 
 		// prep for future shots & disk pick up
 		SetFlywheelVoltage(9100);
@@ -511,8 +511,9 @@ public:
 		// move out, prep to shoot
 		Move(50, 100, 100, 400);
 
+		/*
 		ShootDiskAccurate_voltage(9100, 1000);
-		ShootDiskAccurate_voltage(9100, 1000);
+		ShootDiskAccurate_voltage(9100, 1000);*/
 	}
 
 	void runSkills() {
