@@ -471,18 +471,18 @@ public:
 
 	void runRight() {
 		// prep flywheel
-		SetFlywheelVoltage(9200);
+		SetFlywheelVoltage(9050);
 
 		Move(350, 100, 100, 3000);
 		pros::c::delay(500);
 
 		Turn(23.5, 100);
 	
-		ShootDiskAccurate_voltage(9100, 2000);
+		ShootDiskAccurate_voltage(9050, 2000);
 
-		ShootDiskAccurate_voltage(9100, 1500);
+		ShootDiskAccurate_voltage(9050, 1500);
 
-		ShootDiskAccurate_voltage(9100, 1500);
+		ShootDiskAccurate_voltage(9050, 1500);
 
 		// prep for future shots & disk pick up
 		SetFlywheelVoltage(9100);
