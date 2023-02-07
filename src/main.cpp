@@ -38,7 +38,7 @@ enum AutonMode {
 	AutonNone = 0,
 };
 
-AutonMode autonSide = AutonLeft;
+AutonMode autonSide = AutonRight;
 
 void printAutonMessage() {
 	if (autonSide == AutonLeft)
@@ -418,26 +418,23 @@ private:
 public:
 	void runLeft() {
 		// prep flywheel
-
-		//Set Flywheel Speed
 		SetFlywheelVoltage(8600);
-		pros::c::delay(400);
 
 		//Turn to aim at goal
 		Turn(-18, 100);
-		pros::c::delay(200);
+		pros::c::delay(400);
 
 		//Shoot the two preloads
-		ShootDiskAccurate_voltage(8500, 2000);
+		ShootDiskAccurate_voltage(8600, 2000);
 
-		ShootDiskAccurate_voltage(8500, 1000);
+		ShootDiskAccurate_voltage(8600, 1000);
 
 		//Start Roller
 		SetRollerVelocity(90);
 
 		//Turn back to start
 		Turn(18, 100);
-		pros::c::delay(200);
+		pros::c::delay(250);
 
 
 		//Move back towards roller
@@ -447,38 +444,28 @@ public:
 		//Move forwards from roller after it's turned
 		Move(100, 100, 100, 1000);
 		pros::c::delay(50);
+		
+		//prep flywheel
+		SetFlywheelVoltage(8000);
 
 		//Turn towards stack of discs
-		Turn(70, 100);
-		pros::c::delay(250);
-
-		SetFlywheelVoltage(8000);
-		pros::c::delay(75);
+		Turn(40, 100);
+		pros::c::delay(500);
 
 		//Pick up discs
-		Move(600, 100, 100, 2000);
-		pros::c::delay(50);
-
-		Move(600, 75, 75, 3000);
+		Move(1200, 100, 100, 5000);
 		pros::c::delay(50);
 
 		//Turn towards goal
-		Turn(-87, 100);
-		pros::c::delay(350);
+		Turn(-78, 100);
+		pros::c::delay(600);
 
 		//Shoot three discs
-		ShootDiskAccurate_voltage(7500, 1000);
+		ShootDiskAccurate_voltage(8000, 1000);
 
-		ShootDiskAccurate_voltage(7500, 1000);
+		ShootDiskAccurate_voltage(8000, 1000);
 
-		ShootDiskAccurate_voltage(7500, 1000);
-
-		/*ShootDiskAccurate(79);
-
-		ShootDiskAccurate(79);
-
-		ShootDiskAccurate(79);*/
-
+		ShootDiskAccurate_voltage(8000, 1000);
 
 	}
 
