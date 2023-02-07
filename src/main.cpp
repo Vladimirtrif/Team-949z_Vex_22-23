@@ -487,11 +487,11 @@ public:
 		// prep for future shots & disk pick up
 		SetFlywheelVoltage(9100);
 
-		// turn towards 3 disks
-		Turn(-69.5, 75);
+		// turn towards 2 disks
+		Turn(-61, 75);
 		pros::c::delay(1000);
 
-		// pick up 3 disks
+		// pick up 2 disks
 		Move(700, 100, 100, 3000);
 		pros::c::delay(500);
 
@@ -500,7 +500,7 @@ public:
 		pros::c::delay(500);
 
 		// turn towards roller
-		Turn(55, 100);
+		Turn(45, 100);
 		pros::c::delay(1000);
 
 		// turn roller
