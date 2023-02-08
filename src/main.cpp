@@ -471,18 +471,19 @@ public:
 
 	void runRight() {
 		// prep flywheel
-		SetFlywheelVoltage(9100);
+		SetFlywheelVoltage(9150);
 
 		Move(350, 100, 100, 3000);
-		pros::c::delay(500);
+		pros::c::delay(400);
 
 		Turn(23.5, 100);
+		pros::c::delay(100);
 	
 		ShootDiskAccurate_voltage(9050, 2000);
 
 		ShootDiskAccurate_voltage(9000, 1500);
 
-		ShootDiskAccurate_voltage(9000, 1500);
+		ShootDiskAccurate_voltage(8950, 1500);
 
 		// prep for future shots & disk pick up
 		SetFlywheelVoltage(9100);
@@ -500,7 +501,7 @@ public:
 		pros::c::delay(500);
 
 		// turn towards roller
-		Turn(45, 100);
+		Turn(44, 100);
 		pros::c::delay(1000);
 
 		// turn roller
