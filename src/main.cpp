@@ -4,12 +4,12 @@
 
 // #define VISION_ENABLED
 #ifdef VISION_ENABLED
-#  include "pros/vision.hpp"
+#include "pros/vision.hpp"
 #endif
 
 // #define OPTICAL_ENABLED
 #ifdef OPTICAL_ENABLED
-#  include "pros/optical.hpp"
+#include "pros/optical.hpp"
 #endif
 
 // Disables all the logging. Comment it out and uncomment next line to get logging working.
@@ -31,7 +31,8 @@ extern "C" char const *const _PROS_COMPILE_DIRECTORY = "";
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define sign(x) ((x) > 0 ? 1 : -1)
 
-enum AutonMode {
+enum AutonMode
+{
 	AutonLeft = 1,
 	AutonRight = 2,
 	AutonSkills = 3,
@@ -40,7 +41,8 @@ enum AutonMode {
 
 AutonMode autonSide = AutonRight;
 
-void printAutonMessage() {
+void printAutonMessage()
+{
 	if (autonSide == AutonLeft)
 	{
 		pros::lcd::set_text(1, "Selected Auton is Left");
@@ -89,12 +91,11 @@ void disabled() {}
  */
 void competition_initialize() {}
 
-
 /**
- * 
+ *
  * Program - common code between Autonomous & manual driving
- * 
-*/
+ *
+ */
 class Program
 {
 protected:
@@ -122,7 +123,8 @@ protected:
 
 	// constructor
 public:
-	Program() {
+	Program()
+	{
 #ifdef OPTICAL_ENABLED
 		vision_sensor.set_signature(1, &sig1);
 		vision_sensor.set_signature(2, &sig2);
@@ -139,10 +141,10 @@ public:
 	void ShootDisk()
 	{
 		pros::c::adi_digital_write(ShootPort, HIGH);
-		pros::c::delay(250);
+		pros::c::delay(150);
 
 		pros::c::adi_digital_write(ShootPort, LOW);
-		pros::c::delay(250);
+		pros::c::delay(150);
 	}
 
 	double getFlywheelVelocity()
@@ -170,24 +172,25 @@ public:
 
 	void ShootDiskAccurate_old(unsigned int speed, int delay)
 	{
-        SetFlywheelVelocity(speed);
-        pros::c::delay(delay);
+		SetFlywheelVelocity(speed);
+		pros::c::delay(delay);
 
-        for (int i = 0; i < 200; i++) {
-            auto vel = getFlywheelVelocity();
+		for (int i = 0; i < 200; i++)
+		{
+			auto vel = getFlywheelVelocity();
 
-            log("%.1f\n", vel);
-            pros::c::delay(10);
-        }
-        ShootDisk();
+			log("%.1f\n", vel);
+			pros::c::delay(10);
+		}
+		ShootDisk();
 	}
 
 	void ShootDiskAccurate_voltage(unsigned int voltage, int delay)
 	{
-        SetFlywheelVoltage(voltage);
-        pros::c::delay(delay);
+		SetFlywheelVoltage(voltage);
+		pros::c::delay(delay);
 
-        ShootDisk();
+		ShootDisk();
 	}
 
 	void ShootDiskAccurate(unsigned int speed)
@@ -195,7 +198,7 @@ public:
 		// max time we wait for flywehee to reach desired speed, using SetFlywheelVelocity() flow
 		auto waitTimeMax = 400;
 		// If speed is achieved sooner than above timeout, we wait extra 20 cycles before switching
-		// to waiting using voltage-based algorithm 
+		// to waiting using voltage-based algorithm
 		auto autoextraWaitAfterReachingSpeed = 70;
 		// Time we wait using voltage-setting algorithm
 		auto settlementTime = 180;
@@ -207,7 +210,8 @@ public:
 		unsigned int counter = 0;
 		double speedsum = 0;
 
-		while (true) {
+		while (true)
+		{
 
 			// Further out we are - the more voltage we need to faster get there
 			// But once we reach the speed, we need some power to simply maintain momentum
@@ -221,12 +225,14 @@ public:
 				// But give it 200ms to work through with velocity-based algorithm
 				if (vel >= speed && waitTimeMax >= autoextraWaitAfterReachingSpeed)
 				{
-					log("--- Waited %d ---\n", (400-waitTimeMax) * 10);
+					log("--- Waited %d ---\n", (400 - waitTimeMax) * 10);
 					waitTimeMax = autoextraWaitAfterReachingSpeed;
 				}
 				if (waitTimeMax == 0)
 					log("--- Voltage-based --- \n");
-			} else {
+			}
+			else
+			{
 				int voltage = speed * 126;
 				if (vel < speed)
 					voltage += 30 * (speed - vel);
@@ -253,7 +259,8 @@ public:
 			}
 
 			// shooting
-			if (settlementTime == 0 && pistonExtendedTime > 0) {
+			if (settlementTime == 0 && pistonExtendedTime > 0)
+			{
 				pistonExtendedTime--;
 				pros::c::adi_digital_write(ShootPort, HIGH);
 				log("%.1f\n", vel);
@@ -272,8 +279,20 @@ public:
 		log("\n\n");
 	}
 
+	void SetDriveAuton(int Lspeed, int Rspeed, int ticks)
+	{
+		left_front.move_relative(ticks, Lspeed);
+		left_middle.move_relative(ticks, Lspeed);
+		left_back.move_relative(ticks, Lspeed);
+
+		right_front.move_relative(ticks, Rspeed);
+		right_middle.move_relative(ticks, Rspeed);
+		right_back.move_relative(ticks, -Rspeed);
+	}
+
 	void SetDrive(int Lspeed, int Rspeed)
 	{
+
 		left_front.move(Lspeed);
 		left_middle.move(Lspeed);
 		left_back.move(Lspeed);
@@ -281,45 +300,43 @@ public:
 		right_middle.move(Rspeed);
 		right_back.move(-Rspeed);
 	}
-}; 
-	/*
+};
+/*
 float Kp = 0.2;
 float Kd = 0.0;
 float Ki = 0.0;
 int targetVelocity = 0;
 
-	int shootPID() {
-		while() {
-			lastError = currentVelocity;
+int shootPID() {
+	while() {
+		lastError = currentVelocity;
 
-			float error = targetVelocity - getFlywheelVelocity()();
-			float deltaT = ;
-			
-			float P = error * Kp
+		float error = targetVelocity - getFlywheelVelocity()();
+		float deltaT = ;
 
-			float I += error * deltaT * Ki
+		float P = error * Kp
 
-			float D = ((currentVelocity - lastVelocity) / deltaT) * Kd;
+		float I += error * deltaT * Ki
 
-			int output = P + I - D;
+		float D = ((currentVelocity - lastVelocity) / deltaT) * Kd;
+
+		int output = P + I - D;
 
 
-		}
 	}
-	
-	int drivePID() {
-		while() {
+}
 
-		}
-	}*/
+int drivePID() {
+	while() {
 
-
+	}
+}*/
 
 /**
- * 
+ *
  * Autonomous - Autonomous related code
- * 
-*/
+ *
+ */
 class Autonomous : public Program
 {
 
@@ -344,7 +361,7 @@ private:
 		int counter = 0;
 		int startPos = getPos();
 
-		SetDrive(Lspeed * 127 / 200, Rspeed * 127 / 200);
+		SetDriveAuton(Lspeed * 127 / 200, Rspeed * 127 / 200, ticks);
 
 		while (abs(getPos() - startPos) < ticks && counter <= timeOut)
 		{
@@ -358,13 +375,19 @@ private:
 
 	void Turn(double degrees, int speed)
 	{
-		left_front.move_relative((degrees / 360) * 3525 * 2/3, speed);
-		left_middle.move_relative((degrees / 360) * 3525 * 2/3, speed);
-		left_back.move_relative((degrees / 360) * 3525 * 2/3, speed);
+		int counter = 0;
+		int startLeftPos = getLeftPos();
+		int startRightPos = getRightPos();
 
-		right_front.move_relative((degrees / 360) * -3525 * 2/3, speed);
-		right_middle.move_relative((degrees / 360) * -3525 * 2/3, speed);
-		right_back.move_relative((degrees / 360) * 3525 * 2/3, speed);
+		SetDriveAuton(speed, -speed, (degrees / 360) * 3525 * 2 / 3);
+
+		while (abs(getLeftPos() - startLeftPos) < ((degrees - 1) / 360) * 3525 * 2 / 3 && abs(getRightPos() - startRightPos) < ((degrees - 1) / 360) * 3525 * 2 / 3)
+		{
+			pros::c::delay(10);
+			counter = counter + 10;
+		}
+		pros::c::delay(100);
+		SetDrive(0, 0);
 	}
 
 #ifdef VISION_ENABLED
@@ -416,69 +439,64 @@ private:
 #endif
 
 public:
-	void runLeft() {
+	void runLeft()
+	{
 		// prep flywheel
 		SetFlywheelVoltage(8600);
-
-		//Turn to aim at goal
-		Turn(-18, 100);
 		pros::c::delay(400);
 
-		//Shoot the two preloads
+		// Turn to aim at goal
+		Turn(-18, 100);
+
+		// Shoot the two preloads
 		ShootDiskAccurate_voltage(8600, 2000);
 
 		ShootDiskAccurate_voltage(8600, 1000);
 
-		//Start Roller
+		// Start Roller
 		SetRollerVelocity(90);
 
-		//Turn back to start
+		// Turn back to start
 		Turn(18, 100);
-		pros::c::delay(250);
 
-
-		//Move back towards roller
+		// Move back towards roller
 		Move(175, -70, -70, 350);
 		pros::c::delay(50);
 
-		//Move forwards from roller after it's turned
+		// Move forwards from roller after it's turned
 		Move(100, 100, 100, 1000);
-		pros::c::delay(50);
-		
-		//prep flywheel
+
+		// prep flywheel
 		SetFlywheelVoltage(8000);
 
-		//Turn towards stack of discs
+		// Turn towards stack of discs
 		Turn(40, 100);
-		pros::c::delay(500);
 
-		//Pick up discs
+		// Pick up discs
 		Move(1200, 100, 100, 5000);
 		pros::c::delay(50);
 
-		//Turn towards goal
+		// Turn towards goal
 		Turn(-78, 100);
-		pros::c::delay(600);
 
-		//Shoot three discs
+		// Shoot three discs
 		ShootDiskAccurate_voltage(8000, 1000);
 
 		ShootDiskAccurate_voltage(8000, 1000);
 
 		ShootDiskAccurate_voltage(8000, 1000);
-
 	}
 
-	void runRight() {
+	void runRight()
+	{
 		// prep flywheel
 		SetFlywheelVoltage(9150);
-
-		Move(350, 100, 100, 3000);
 		pros::c::delay(400);
 
+		Move(350, 100, 100, 3000);
+
 		Turn(23.5, 100);
-		pros::c::delay(100);
-	
+
 		ShootDiskAccurate_voltage(9050, 2000);
 
 		ShootDiskAccurate_voltage(9000, 1500);
@@ -487,22 +505,19 @@ public:
 
 		// prep for future shots & disk pick up
 		SetFlywheelVoltage(9100);
+		pros::c::delay(500);
 
 		// turn towards 2 disks
 		Turn(-61, 75);
-		pros::c::delay(1000);
 
 		// pick up 2 disks
 		Move(700, 100, 100, 3000);
-		pros::c::delay(500);
 
 		// Move backwards toward roller
 		Move(1400, -120, -120, 3000);
-		pros::c::delay(500);
 
 		// turn towards roller
 		Turn(44, 100);
-		pros::c::delay(1000);
 
 		// turn roller
 		SetRollerVelocity(90);
@@ -517,9 +532,10 @@ public:
 		ShootDiskAccurate_voltage(9100, 1000);*/
 	}
 
-	void runSkills() {
+	void runSkills()
+	{
 		// prep flywheel
-		
+
 		/*SetFlywheelVelocity(82);
 
 		Turn(-13.5, 100);
@@ -530,7 +546,7 @@ public:
 		ShootDiskAccurate_old(84, 1000);
 
 		SetRollerVelocity(90);
-	
+
 		Turn(13.5, 100);
 		pros::c::delay(200);
 
@@ -613,7 +629,6 @@ void autonomous()
 	self_drive.run();
 }
 
-
 /**
  * Runs the operator control code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -627,13 +642,15 @@ void autonomous()
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
-class OpControl: public Program {
+class OpControl : public Program
+{
 public:
-	void opcontrol() {
+	void opcontrol()
+	{
 		pros::Controller master(CONTROLLER_MASTER);
-	#ifdef OPTICAL_ENABLED
+#ifdef OPTICAL_ENABLED
 		pros::Optical optical_sensor(opticalPort);
-	#endif
+#endif
 
 		int dead_Zone = 10; // the dead zone for the joysticks
 		const int defaultFlyWheelSpeed = -69;
@@ -644,7 +661,7 @@ public:
 		{
 			/**
 			 * Autonomous selection
-			*/
+			 */
 			if (pros::lcd::read_buttons() == 4)
 			{
 				autonSide = AutonLeft;
@@ -661,7 +678,7 @@ public:
 
 			/**
 			 * Drivetrain
-			*/
+			 */
 			int leftSpeed = 0;
 			int rightSpeed = 0;
 			int analogY = master.get_analog(ANALOG_LEFT_Y);
@@ -707,19 +724,19 @@ public:
 				SetDrive(leftSpeed * 1.574, rightSpeed * 1.574);
 			}
 
-	#ifdef OPTICAL_ENABLED
+#ifdef OPTICAL_ENABLED
 			auto rgb_value = optical_sensor.get_rgb();
 			if (master.get_digital(DIGITAL_R1) && !rgb_value.blue && !rgb_value.blue)
-	#endif 
+#endif
 
-			/**
-			 * Flywheel
-			*/
-			// Flywheel is on low setting
-			if (master.get_digital_new_press(DIGITAL_A))
-			{
-				FlyWheelSpeed = defaultFlyWheelSpeed;
-			}
+				/**
+				 * Flywheel
+				 */
+				// Flywheel is on low setting
+				if (master.get_digital_new_press(DIGITAL_A))
+				{
+					FlyWheelSpeed = defaultFlyWheelSpeed;
+				}
 
 			// Flywheel is powered, reverse
 			if (master.get_digital_new_press(DIGITAL_Y))
@@ -727,7 +744,7 @@ public:
 				FlyWheelSpeed = -defaultFlyWheelSpeed;
 			}
 
-			//Flywheel is stopped
+			// Flywheel is stopped
 			if (master.get_digital_new_press(DIGITAL_B))
 			{
 				FlyWheelSpeed = 0;
@@ -744,7 +761,7 @@ public:
 
 			/**
 			 * Shooting disks
-			*/
+			 */
 			if (master.get_digital_new_press(DIGITAL_R2))
 			{
 				ShootDisk();
@@ -752,7 +769,7 @@ public:
 
 			/**
 			 * End-game expansion
-			*/
+			 */
 			if (master.get_digital(DIGITAL_L1) && master.get_digital(DIGITAL_R1))
 			{
 				pros::c::adi_digital_write(expansionPort, HIGH);
