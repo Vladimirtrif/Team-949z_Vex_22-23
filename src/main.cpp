@@ -139,10 +139,10 @@ public:
 	void ShootDisk()
 	{
 		pros::c::adi_digital_write(ShootPort, HIGH);
-		pros::c::delay(250);
+		pros::c::delay(100);
 
 		pros::c::adi_digital_write(ShootPort, LOW);
-		pros::c::delay(250);
+		pros::c::delay(100);
 	}
 
 	double getFlywheelVelocity()
