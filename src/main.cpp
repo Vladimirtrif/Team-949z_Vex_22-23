@@ -745,10 +745,23 @@ public:
 			/**
 			 * Shooting disks
 			*/
-			if (master.get_digital_new_press(DIGITAL_R2))
+			/*if (master.get_digital_new_press(DIGITAL_R2))
 			{
 				ShootDisk();
+			}*/
+
+			if (master.get_digital_new_press(DIGITAL_R2))
+			{
+				for(int i = 0; i < 3; i++) {
+					if(master.get_digital(DIGITAL_R2)) {
+							ShootDisk();
+				}
+				else {
+					i = 3;
+				}
+				}
 			}
+
 
 			/**
 			 * End-game expansion
