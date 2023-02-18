@@ -542,21 +542,8 @@ public:
 
 	void runSkills()
 	{
-		// prep flywheel
-
-		/*SetFlywheelVelocity(82);
-
-		Turn(-13.5, 100);
-		pros::c::delay(200);
-
-		ShootDiskAccurate_old(82, 2000);
-
-		ShootDiskAccurate_old(84, 1000);
-
+		//Roller 1
 		SetRollerVelocity(90);
-
-		Turn(13.5, 100);
-		pros::c::delay(200);
 
 		Move(180, -70, -70, 1000);
 		pros::c::delay(200);
@@ -564,39 +551,24 @@ public:
 		Move(100, 100, 100, 1000);
 		pros::c::delay(50);
 
-		Turn(50, 100);
-		pros::c::delay(250);
-
-		SetFlywheelVelocity(66);
-		pros::c::delay(75);
-
-		Move(600, 50, 50, 2000);
-		pros::c::delay(50);
-
-		Move(600, 40, 40, 3000);
-		pros::c::delay(50);
-
-		Turn(-66, 100);
-		pros::c::delay(350);
-
-		ShootDiskAccurate(79);
-		pros::c::delay(50);
-
-		ShootDiskAccurate(79);
-		pros::c::delay(50);
-
-		ShootDiskAccurate(79);
-		pros::c::delay(50);
-
-		SetRollerVelocity(0);
+		//Move and Turn towards second roller
+		Move(500, 100, 100, 1000);
 		pros::c::delay(100);
 
-		Turn(66, 100);
-		pros::c::delay(400);
+		Turn(-90, 100);
+		pros::c::delay(100);
 
-		Move(1200, -50, -50, 4000);
-		pros::c::delay(100);*/
+		Move(2500, -100, -100, 1000);
+		pros::c::delay(100);
 
+		//Roller 2
+		Move(180, -70, -70, 1000);
+		pros::c::delay(200);
+
+		Move(100, 100, 100, 1000);
+		pros::c::delay(50);
+
+		//Expansion
 		pros::c::adi_digital_write(expansionPort2, HIGH);
 		pros::c::adi_digital_write(expansionPort, HIGH);
 	}
