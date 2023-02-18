@@ -4,12 +4,12 @@
 
 // #define VISION_ENABLED
 #ifdef VISION_ENABLED
-#  include "pros/vision.hpp"
+#include "pros/vision.hpp"
 #endif
 
 // #define OPTICAL_ENABLED
 #ifdef OPTICAL_ENABLED
-#  include "pros/optical.hpp"
+#include "pros/optical.hpp"
 #endif
 
 // Disables all the logging. Comment it out and uncomment next line to get logging working.
@@ -31,6 +31,7 @@ extern "C" char const *const _PROS_COMPILE_DIRECTORY = "";
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define sign(x) ((x) > 0 ? 1 : -1)
 
+enum AutonMode
 {
 	AutonLeft = 1,
 	AutonRight = 2,
