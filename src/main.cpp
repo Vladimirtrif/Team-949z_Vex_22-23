@@ -39,7 +39,7 @@ enum AutonMode
 	AutonNone = 0,
 };
 
-AutonMode autonSide = AutonRight;
+AutonMode autonSide = AutonSkills;
 
 void printAutonMessage()
 {
@@ -107,7 +107,7 @@ protected:
 
 	pros::Motor right_front{RightFrontPort, true};
 	pros::Motor right_middle{RightMiddlePort};
-	pros::Motor right_back{RightBackPort};
+	pros::Motor right_back{RightBackPort, true};
 
 	// Should be E_MOTOR_GEARSET_06 - 600 rpm
 	pros::Motor FlyWheel1{fly_wheel1, MOTOR_GEARSET_36, true}; // Pick correct gearset (36 is red)
@@ -167,7 +167,7 @@ public:
 	void SetFlywheelVoltage(unsigned int voltage)
 	{
 		FlyWheel1.move_voltage(-voltage);
-		Intake.move_velocity(-voltage);
+		Intake.move_voltage(-voltage);
 	}
 
 	void ShootDiskAccurate_old(unsigned int speed, int delay)
@@ -193,101 +193,26 @@ public:
 		ShootDisk();
 	}
 
-	void ShootDiskAccurate(unsigned int speed)
+	void ShootDiskAccurate(int voltage)
 	{
-		// max time we wait for flywehee to reach desired speed, using SetFlywheelVelocity() flow
-		auto waitTimeMax = 400;
-		// If speed is achieved sooner than above timeout, we wait extra 20 cycles before switching
-		// to waiting using voltage-based algorithm
-		auto autoextraWaitAfterReachingSpeed = 70;
-		// Time we wait using voltage-setting algorithm
-		auto settlementTime = 180;
-		// amount of time we wait after extending piston before retrieving it back
-		auto pistonExtendedTime = 40;
+		/*Set RPM to max to speed up the motor as fast as possible
+		FlyWheel1.move_velocity(-600);
+		Intake.move_velocity(-600);
+		while(c)*/
 
-		SetFlywheelVelocity(speed);
-
-		unsigned int counter = 0;
-		double speedsum = 0;
-
-		while (true)
-		{
-
-			// Further out we are - the more voltage we need to faster get there
-			// But once we reach the speed, we need some power to simply maintain momentum
-			auto vel = getFlywheelVelocity();
-
-			// Are we still waiting for flywheel to speed up?
-			if (waitTimeMax > 0)
-			{
-				waitTimeMax--;
-				// if we reached desired speed, we are moving to settlement period
-				// But give it 200ms to work through with velocity-based algorithm
-				if (vel >= speed && waitTimeMax >= autoextraWaitAfterReachingSpeed)
-				{
-					log("--- Waited %d ---\n", (400 - waitTimeMax) * 10);
-					waitTimeMax = autoextraWaitAfterReachingSpeed;
-				}
-				if (waitTimeMax == 0)
-					log("--- Voltage-based --- \n");
-			}
-			else
-			{
-				int voltage = speed * 126;
-				if (vel < speed)
-					voltage += 30 * (speed - vel);
-
-				// Max is +-12,000
-				if (voltage >= 12000)
-					voltage = 12000;
-
-				// printf("%.1f\n", vel);
-				counter++;
-				speedsum += vel;
-
-				FlyWheel1.move_voltage(-voltage);
-				Intake.move_voltage(-voltage);
-			}
-
-			// settlement period - just wait, so specific action
-			if (waitTimeMax == 0 && settlementTime > 0)
-			{
-				log("%.1f\n", vel);
-				settlementTime--;
-				if (settlementTime == 0)
-					log("---- Shoot! ---\n");
-			}
-
-			// shooting
-			if (settlementTime == 0 && pistonExtendedTime > 0)
-			{
-				pistonExtendedTime--;
-				pros::c::adi_digital_write(ShootPort, HIGH);
-				log("%.1f\n", vel);
-			}
-
-			if (pistonExtendedTime == 0)
-				break;
-
-			pros::c::delay(10);
-		}
-
-		printf("%.2f\n", speedsum / counter);
-
-		SetFlywheelVelocity(speed);
-		pros::c::adi_digital_write(ShootPort, LOW);
-		log("\n\n");
 	}
 
-	void SetDriveAuton(int Lspeed, int Rspeed, int ticks)
+	void SetDriveRelative(int ticks, int Speed)
 	{
-		left_front.move_relative(ticks, Lspeed);
-		left_middle.move_relative(ticks, Lspeed);
-		left_back.move_relative(ticks, Lspeed);
 
-		right_front.move_relative(ticks, Rspeed);
-		right_middle.move_relative(ticks, Rspeed);
-		right_back.move_relative(ticks, -Rspeed);
+		left_front.move_relative(ticks, Speed);
+		left_middle.move_relative(ticks, Speed);
+		left_back.move_relative(ticks, Speed);
+
+		right_front.move_relative(ticks, Speed);
+		right_middle.move_relative(ticks, Speed);
+		right_back.move_relative(ticks, Speed);
+		printf("Set Auton Drive ticks = %d S =  %d \n" , ticks, Speed);
 	}
 
 	void SetDrive(int Lspeed, int Rspeed)
@@ -298,7 +223,7 @@ public:
 		left_back.move(Lspeed);
 		right_front.move(Rspeed);
 		right_middle.move(Rspeed);
-		right_back.move(-Rspeed);
+		right_back.move(Rspeed);
 	}
 };
 /*
@@ -356,8 +281,9 @@ private:
 		return (getLeftPos() + getRightPos()) / 2;
 	}
 
-	int getAngle() {
-		return ((abs(getLeftPos()) + abs(getRightPos())) / 2) * 10575 * 360;
+	double getAngle() {
+		double fullCircleTicks  = (3525 * 2/3);
+		return ((((getLeftPos() - getRightPos()) / 2.0) / fullCircleTicks) * 360.0);
 	}
 
 	void Move(int ticks, int Lspeed, int Rspeed, int timeOut)
@@ -365,35 +291,47 @@ private:
 		int counter = 0;
 		int startPos = getPos();
 
-		SetDriveAuton(Lspeed * 127 / 200, Rspeed * 127 / 200, ticks);
+		SetDriveRelative(ticks, Lspeed * 127 / 200);
 
-		while (abs(getPos() - startPos) < ticks && counter <= timeOut)
+		while (abs(getPos() - startPos) < abs(ticks) && counter <= timeOut)
 		{
 			pros::c::delay(10);
 			counter = counter + 10;
+			printf("   Current position %d \n", (getPos() - startPos));
 		}
 
 		SetDrive(0, 0);
 		pros::c::delay(100);
 	}
 
-	void Turn(double degrees, int speed)
+	void Turn(double degrees, int speed, int timeOut)
 	{
 		int counter = 0;
 		/*int startLeftPos = getLeftPos();
 		int startRightPos = getRightPos();*/
-		int ticks = ((degrees / 360) * 3525 * 2 / 3);
+		int ticks = ((degrees / 360) * 3525 * 2/3);
 		int startAngle = getAngle();
 
+		printf("Turn degrees = %f S = %d StartAngle = %f \n", degrees, speed, startAngle);
 
-		SetDriveAuton(speed, -speed, ticks);
+		left_front.move_relative(ticks, speed);
+		left_middle.move_relative(ticks, speed);
+		left_back.move_relative(ticks, speed);
+		
+
+		right_front.move_relative(-ticks, speed);
+		right_middle.move_relative(-ticks, speed);
+		right_back.move_relative(-ticks, speed);
 
 		//while (abs(getLeftPos() - startLeftPos) < ticks - 100 && abs(getRightPos() - startRightPos) < ticks - 100)
-		while ((getAngle() - startAngle) < degrees)
+		while (abs(getAngle() - startAngle) < abs(degrees) && counter < timeOut)
 		{
+			printf("   Degrees Turned = %f \n", (getAngle() - startAngle));
 			pros::c::delay(10);
 			counter = counter + 10;
 		}
+
+		printf(" Degrees Turned at End = %f \n", (getAngle() - startAngle));
 		SetDrive(0, 0);
 		pros::c::delay(100);
 	}
@@ -454,7 +392,7 @@ public:
 		pros::c::delay(400);
 
 		// Turn to aim at goal
-		Turn(-18, 100);
+		Turn(-18, 100, 5000);
 
 		// Shoot the two preloads
 		ShootDiskAccurate_voltage(8600, 2000);
@@ -465,7 +403,7 @@ public:
 		SetRollerVelocity(90);
 
 		// Turn back to start
-		Turn(18, 100);
+		Turn(18, 100, 5000);
 
 		// Move back towards roller
 		Move(175, -70, -70, 350);
@@ -478,14 +416,14 @@ public:
 		SetFlywheelVoltage(8000);
 
 		// Turn towards stack of discs
-		Turn(40, 100);
+		Turn(40, 100, 5000);
 
 		// Pick up discs
 		Move(1200, 100, 100, 5000);
 		pros::c::delay(50);
 
 		// Turn towards goal
-		Turn(-78, 100);
+		Turn(-78, 100, 5000);
 
 		// Shoot three discs
 		ShootDiskAccurate_voltage(8000, 1000);
@@ -503,7 +441,7 @@ public:
 
 		Move(350, 100, 100, 3000);
 
-		Turn(23.5, 100);
+		Turn(23.5, 100, 5000);
 
 		ShootDiskAccurate_voltage(9050, 2000);
 
@@ -516,7 +454,7 @@ public:
 		pros::c::delay(500);
 
 		// turn towards 2 disks
-		Turn(-61, 75);
+		Turn(-61, 75, 5000);
 
 		// pick up 2 disks
 		Move(700, 100, 100, 3000);
@@ -525,7 +463,7 @@ public:
 		Move(1400, -120, -120, 3000);
 
 		// turn towards roller
-		Turn(44, 100);
+		Turn(44, 100, 5000);
 
 		// turn roller
 		SetRollerVelocity(90);
@@ -543,20 +481,21 @@ public:
 	void runSkills()
 	{
 		//Roller 1
-		SetRollerVelocity(90);
+		//SetRollerVelocity(90);
 
-		Move(180, -70, -70, 1000);
-		pros::c::delay(200);
+		/*Move(-180, 100, 100, 1000);
+		pros::c::delay(500);
 
 		Move(100, 100, 100, 1000);
-		pros::c::delay(50);
+		pros::c::delay(500);
 
 		//Move and Turn towards second roller
 		Move(500, 100, 100, 1000);
-		pros::c::delay(100);
+		pros::c::delay(500);*/
 
-		Turn(-90, 100);
-		pros::c::delay(100);
+		Turn(90, 25, 5000);
+		pros::c::delay(500);
+		/*
 
 		Move(2500, -100, -100, 1000);
 		pros::c::delay(100);
@@ -570,7 +509,7 @@ public:
 
 		//Expansion
 		pros::c::adi_digital_write(expansionPort2, HIGH);
-		pros::c::adi_digital_write(expansionPort, HIGH);
+		pros::c::adi_digital_write(expansionPort, HIGH);*/
 	}
 
 	void run()
