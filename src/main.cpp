@@ -356,6 +356,10 @@ private:
 		return (getLeftPos() + getRightPos()) / 2;
 	}
 
+	int getAngle() {
+		((abs(getLeftPos()) + abs(getRightPos())) / 2) * 10575 * 360;
+	}
+
 	void Move(int ticks, int Lspeed, int Rspeed, int timeOut)
 	{
 		int counter = 0;
@@ -376,18 +380,22 @@ private:
 	void Turn(double degrees, int speed)
 	{
 		int counter = 0;
-		int startLeftPos = getLeftPos();
+		/*int startLeftPos = getLeftPos();
 		int startRightPos = getRightPos();
+		int ticks = ((degrees / 360) * 3525 * 2 / 3);*/
+		int startAngle = getAngle();
 
-		SetDriveAuton(speed, -speed, (degrees / 360) * 3525 * 2 / 3);
 
-		while (abs(getLeftPos() - startLeftPos) < ((degrees - 1) / 360) * 3525 * 2 / 3 && abs(getRightPos() - startRightPos) < ((degrees - 1) / 360) * 3525 * 2 / 3)
+		SetDriveAuton(speed, -speed, ticks);
+
+		//while (abs(getLeftPos() - startLeftPos) < ticks - 100 && abs(getRightPos() - startRightPos) < ticks - 100)
+		while ((getAngle() - startAngle) < degrees)
 		{
 			pros::c::delay(10);
 			counter = counter + 10;
 		}
-		pros::c::delay(100);
 		SetDrive(0, 0);
+		pros::c::delay(100);
 	}
 
 #ifdef VISION_ENABLED
