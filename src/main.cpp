@@ -774,19 +774,6 @@ public:
 			FlyWheel1.move_velocity(FlyWheelSpeed);
 			Intake.move_velocity(FlyWheelSpeed);
 
-			/**
-			 * Shooting disks
-<<<<<<< HEAD
-			*/
-			/*if (master.get_digital_new_press(DIGITAL_R2))
-=======
-			 */
-			if (master.get_digital_new_press(DIGITAL_R2))
->>>>>>> Autonomous---Turn-and-Move
-			{
-				ShootDisk();
-			}*/
-
 			if (master.get_digital_new_press(DIGITAL_R2))
 			{
 				FlyWheel1.move(-127);
