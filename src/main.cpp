@@ -202,17 +202,17 @@ public:
 
 	}
 
-	void SetDriveRelative(int ticks, int Speed)
+	void SetDriveRelative(int ticks, int Rspeed, int Lspeed)
 	{
 
-		left_front.move_relative(ticks, Speed);
-		left_middle.move_relative(ticks, Speed);
-		left_back.move_relative(ticks, Speed);
+		left_front.move_relative(ticks, Lspeed);
+		left_middle.move_relative(ticks, Lspeed);
+		left_back.move_relative(ticks, Lspeed);
 
-		right_front.move_relative(ticks, Speed);
-		right_middle.move_relative(ticks, Speed);
-		right_back.move_relative(ticks, Speed);
-		printf("Set Auton Drive ticks = %d S =  %d \n" , ticks, Speed);
+		right_front.move_relative(ticks, Rspeed);
+		right_middle.move_relative(ticks, Rspeed);
+		right_back.move_relative(ticks, Rspeed);
+		printf("Set Auton Drive ticks = %d RS =  %d LS = %d \n" , ticks, Rspeed, Lspeed);
 	}
 
 	void SetDrive(int Lspeed, int Rspeed)
@@ -266,6 +266,9 @@ class Autonomous : public Program
 {
 
 private:
+
+	double fullCircleTicks  = (2130);
+
 	int getLeftPos()
 	{
 		return (left_front.get_position() + left_middle.get_position() + left_back.get_position()) / 3;
@@ -282,7 +285,6 @@ private:
 	}
 
 	double getAngle() {
-		double fullCircleTicks  = (3525 * 2/3);
 		return ((((getLeftPos() - getRightPos()) / 2.0) / fullCircleTicks) * 360.0);
 	}
 
@@ -291,7 +293,7 @@ private:
 		int counter = 0;
 		int startPos = getPos();
 
-		SetDriveRelative(ticks, Lspeed * 127 / 200);
+		SetDriveRelative(ticks, Rspeed * 127 / 200, Lspeed * 127 / 200);
 
 		while (abs(getPos() - startPos) < abs(ticks) && counter <= timeOut)
 		{
@@ -309,19 +311,19 @@ private:
 		int counter = 0;
 		/*int startLeftPos = getLeftPos();
 		int startRightPos = getRightPos();*/
-		int ticks = ((degrees / 360) * 3525 * 2/3);
+		int ticks = ((degrees / 360) * fullCircleTicks);
 		int startAngle = getAngle();
 
 		printf("Turn degrees = %f S = %d StartAngle = %f \n", degrees, speed, startAngle);
 
-		left_front.move_relative(ticks, speed);
-		left_middle.move_relative(ticks, speed);
-		left_back.move_relative(ticks, speed);
+		left_front.move_relative(ticks * 1.005, speed);
+		left_middle.move_relative(ticks * 1.005, speed);
+		left_back.move_relative(ticks * 1.005, speed);
 		
 
-		right_front.move_relative(-ticks, speed);
-		right_middle.move_relative(-ticks, speed);
-		right_back.move_relative(-ticks, speed);
+		right_front.move_relative(-ticks * 1.005, speed);
+		right_middle.move_relative(-ticks * 1.005, speed);
+		right_back.move_relative(-ticks * 1.005, speed);
 
 		//while (abs(getLeftPos() - startLeftPos) < ticks - 100 && abs(getRightPos() - startRightPos) < ticks - 100)
 		while (abs(getAngle() - startAngle) < abs(degrees) && counter < timeOut)
@@ -481,23 +483,19 @@ public:
 	void runSkills()
 	{
 		//Roller 1
-		//SetRollerVelocity(90);
+		/*SetRollerVelocity(90);
 
-		/*Move(-180, 100, 100, 1000);
-		pros::c::delay(500);
+		Move(-180, 70, 70, 1000);
+		pros::c::delay(200);*/
 
-		Move(100, 100, 100, 1000);
-		pros::c::delay(500);
-
-		//Move and Turn towards second roller
-		Move(500, 100, 100, 1000);
+		/*Move(450, 100, 99, 5000);
 		pros::c::delay(500);*/
 
-		Turn(90, 25, 5000);
+		Turn(-90, 60, 10000);
 		pros::c::delay(500);
 		/*
 
-		Move(2500, -100, -100, 1000);
+		Move(-700, 70, 70, 1000);
 		pros::c::delay(100);
 
 		//Roller 2
