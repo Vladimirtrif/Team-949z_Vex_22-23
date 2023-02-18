@@ -141,17 +141,10 @@ public:
 	void ShootDisk()
 	{
 		pros::c::adi_digital_write(ShootPort, HIGH);
-<<<<<<< HEAD
 		pros::c::delay(100);
 
 		pros::c::adi_digital_write(ShootPort, LOW);
 		pros::c::delay(100);
-=======
-		pros::c::delay(150);
-
-		pros::c::adi_digital_write(ShootPort, LOW);
-		pros::c::delay(150);
->>>>>>> Autonomous---Turn-and-Move
 	}
 
 	double getFlywheelVelocity()
@@ -364,7 +357,7 @@ private:
 	}
 
 	int getAngle() {
-		((abs(getLeftPos()) + abs(getRightPos())) / 2) * 10575 * 360;
+		return ((abs(getLeftPos()) + abs(getRightPos())) / 2) * 10575 * 360;
 	}
 
 	void Move(int ticks, int Lspeed, int Rspeed, int timeOut)
@@ -388,8 +381,8 @@ private:
 	{
 		int counter = 0;
 		/*int startLeftPos = getLeftPos();
-		int startRightPos = getRightPos();
-		int ticks = ((degrees / 360) * 3525 * 2 / 3);*/
+		int startRightPos = getRightPos();*/
+		int ticks = ((degrees / 360) * 3525 * 2 / 3);
 		int startAngle = getAngle();
 
 
