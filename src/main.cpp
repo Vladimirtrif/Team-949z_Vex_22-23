@@ -752,13 +752,18 @@ public:
 
 			if (master.get_digital_new_press(DIGITAL_R2))
 			{
-				for(int i = 0; i < 3; i++) {
-					if(master.get_digital(DIGITAL_R2)) {
-							ShootDisk();
+				FlyWheel1.move(-127);
+				Intake.move(-127);
+
+				for(int i = 0; i < 3 && master.get_digital(DIGITAL_R2); i++) {
+					ShootDisk();
+				}
+
+				if(FlyWheelSpeed == defaultFlyWheelSpeed) {
+					pros::c::delay(100);
 				}
 				else {
-					i = 3;
-				}
+					pros::c::delay(250);
 				}
 			}
 
