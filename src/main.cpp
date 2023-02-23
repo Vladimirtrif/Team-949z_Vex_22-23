@@ -202,7 +202,7 @@ public:
 
 	}
 
-	void SetDriveRelative(int ticks, int Rspeed, int Lspeed)
+	void SetDriveRelative(int ticks, int Lspeed, int Rspeed)
 	{
 
 		left_front.move_relative(ticks, Lspeed);
@@ -212,7 +212,6 @@ public:
 		right_front.move_relative(ticks, Rspeed);
 		right_middle.move_relative(ticks, Rspeed);
 		right_back.move_relative(ticks, Rspeed);
-		printf("Set Auton Drive ticks = %d RS =  %d LS = %d \n" , ticks, Rspeed, Lspeed);
 	}
 
 	void SetDrive(int Lspeed, int Rspeed)
@@ -299,7 +298,6 @@ private:
 		{
 			pros::c::delay(10);
 			counter = counter + 10;
-			printf("   Current position %d \n", (getPos() - startPos));
 		}
 
 		SetDrive(0, 0);
@@ -483,29 +481,38 @@ public:
 	void runSkills()
 	{
 		//Roller 1
-		/*SetRollerVelocity(90);
+		SetRollerVelocity(90);
 
-		Move(-180, 70, 70, 1000);
-		pros::c::delay(200);*/
-
-		/*Move(450, 100, 99, 5000);
-		pros::c::delay(500);*/
-
-		Turn(-90, 60, 10000);
-		pros::c::delay(500);
-		/*
-
-		Move(-700, 70, 70, 1000);
-		pros::c::delay(100);
-
-		//Roller 2
-		Move(180, -70, -70, 1000);
+		Move(-215, 35, 35, 2000);
 		pros::c::delay(200);
 
 		Move(100, 100, 100, 1000);
+
+		SetFlywheelVoltage(8000);
+
+		Move(550, 100, 100, 1000);
+		pros::c::delay(2000);
+
+		//Turn
+		Turn(90, 35, 5000);
+		pros::c::delay(500);
+
+		Move(-885, 70, 70, 5000);
+
+		//Roller 2
+		SetRollerVelocity(90);
+
+		Move(-215, 70, 70, 1000);
+		pros::c::delay(200);
+
+		Move(215, 100, 100, 1000);
 		pros::c::delay(50);
 
-		//Expansion
+		//Turn and Move Across Field
+		Turn(-45, 35, 5000);
+		Move(5000, 100, 100, 20000);
+
+		/*Expansion
 		pros::c::adi_digital_write(expansionPort2, HIGH);
 		pros::c::adi_digital_write(expansionPort, HIGH);*/
 	}
