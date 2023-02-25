@@ -699,7 +699,7 @@ public:
 				FlyWheel1.move_voltage(-12000);
 				Intake.move_voltage(-12000);
 
-				for (int i = 0; i < 3 && master.get_digital(DIGITAL_R2); i++)
+				for (int i = 0; i < 3 && master.get_digital(DIGITAL_R2) && !master.get_digital(DIGITAL_L1) && !master.get_digital(DIGITAL_R1); i++)
 				{
 					FlyWheel1.move_voltage(FlyWheelVoltage);
 					Intake.move_voltage(FlyWheelVoltage);
@@ -713,6 +713,17 @@ public:
 					pros::c::delay(550);
 				}
 				}
+			}
+
+			//override for trajector
+			if (master.get_digital(DIGITAL_DOWN))
+			{
+				pros::c::adi_digital_write(trajector, HIGH);
+			}
+
+			if (master.get_digital(DIGITAL_UP))
+			{
+				pros::c::adi_digital_write(trajector, LOW);
 			}
 
 			/**
