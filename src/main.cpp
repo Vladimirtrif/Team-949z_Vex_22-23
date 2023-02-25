@@ -39,7 +39,8 @@ enum AutonMode
 	AutonNone = 0,
 };
 
-AutonMode autonSide = AutonSkills;
+AutonMode autonSide = AutonRight;
+
 
 void printAutonMessage()
 {
@@ -135,9 +136,14 @@ public:
 		pros::c::adi_digital_write(expansionPort, LOW);
 		pros::c::adi_pin_mode(expansionPort2, OUTPUT);
 		pros::c::adi_digital_write(expansionPort2, LOW);
+		pros::c::adi_pin_mode(trajector, OUTPUT);
+		pros::c::adi_digital_write(trajector, LOW);
 	}
 
 public:
+
+	bool autonCompleted = false;
+
 	void ShootDisk()
 	{
 		pros::c::adi_digital_write(ShootPort, HIGH);
@@ -199,7 +205,6 @@ public:
 		FlyWheel1.move_velocity(-600);
 		Intake.move_velocity(-600);
 		while(c)*/
-
 	}
 
 	void SetDriveRelative(int ticks, int Lspeed, int Rspeed)
@@ -265,8 +270,7 @@ class Autonomous : public Program
 {
 
 private:
-
-	double fullCircleTicks  = (2130);
+	double fullCircleTicks = (2130);
 
 	int getLeftPos()
 	{
@@ -283,7 +287,8 @@ private:
 		return (getLeftPos() + getRightPos()) / 2;
 	}
 
-	double getAngle() {
+	double getAngle()
+	{
 		return ((((getLeftPos() - getRightPos()) / 2.0) / fullCircleTicks) * 360.0);
 	}
 
@@ -317,13 +322,12 @@ private:
 		left_front.move_relative(ticks * 1.005, speed);
 		left_middle.move_relative(ticks * 1.005, speed);
 		left_back.move_relative(ticks * 1.005, speed);
-		
 
 		right_front.move_relative(-ticks * 1.005, speed);
 		right_middle.move_relative(-ticks * 1.005, speed);
 		right_back.move_relative(-ticks * 1.005, speed);
 
-		//while (abs(getLeftPos() - startLeftPos) < ticks - 100 && abs(getRightPos() - startRightPos) < ticks - 100)
+		// while (abs(getLeftPos() - startLeftPos) < ticks - 100 && abs(getRightPos() - startRightPos) < ticks - 100)
 		while (abs(getAngle() - startAngle) < abs(degrees) && counter < timeOut)
 		{
 			printf("   Degrees Turned = %f \n", (getAngle() - startAngle));
@@ -388,90 +392,91 @@ public:
 	void runLeft()
 	{
 		// prep flywheel
-		SetFlywheelVoltage(8600);
+		SetFlywheelVoltage(12000);
 		pros::c::delay(400);
 
 		// Turn to aim at goal
-		Turn(-18, 100, 5000);
+		Turn(-17, 50, 500);
 
 		// Shoot the two preloads
-		ShootDiskAccurate_voltage(8600, 2000);
+		ShootDiskAccurate_voltage(11250, 2500);
 
-		ShootDiskAccurate_voltage(8600, 1000);
+		ShootDiskAccurate_voltage(11250, 1250);
 
 		// Start Roller
 		SetRollerVelocity(90);
 
 		// Turn back to start
-		Turn(18, 100, 5000);
+		Turn(17, 50, 500);
 
 		// Move back towards roller
-		Move(175, -70, -70, 350);
+		Move(-175, 70, 70, 350);
 		pros::c::delay(50);
 
 		// Move forwards from roller after it's turned
 		Move(100, 100, 100, 1000);
 
 		// prep flywheel
-		SetFlywheelVoltage(8000);
+		SetFlywheelVoltage(12000);
 
 		// Turn towards stack of discs
-		Turn(40, 100, 5000);
+		Turn(33, 70, 1000);
 
 		// Pick up discs
-		Move(1200, 100, 100, 5000);
-		pros::c::delay(50);
+		Move(1700, 90, 90, 5000);
+		pros::c::delay(200);
 
 		// Turn towards goal
-		Turn(-78, 100, 5000);
+		Turn(-56, 70, 5000);
 
 		// Shoot three discs
-		ShootDiskAccurate_voltage(8000, 1000);
+		ShootDiskAccurate_voltage(10500, 1000);
 
-		ShootDiskAccurate_voltage(8000, 1000);
+		ShootDiskAccurate_voltage(10500, 1500);
 
-		ShootDiskAccurate_voltage(8000, 1000);
+		ShootDiskAccurate_voltage(10500, 1000);
 	}
 
 	void runRight()
 	{
 		// prep flywheel
-		SetFlywheelVoltage(9150);
+		SetFlywheelVoltage(12000);
 		pros::c::delay(400);
 
-		Move(350, 100, 100, 3000);
+		Move(950, 100, 100, 3000);
+		pros::c::delay(50);
 
-		Turn(23.5, 100, 5000);
+		Turn(23, 100, 5000);
 
-		ShootDiskAccurate_voltage(9050, 2000);
+		ShootDiskAccurate_voltage(11000, 2000);
 
-		ShootDiskAccurate_voltage(9000, 1500);
+		ShootDiskAccurate_voltage(11000, 1500);
 
-		ShootDiskAccurate_voltage(8950, 1500);
+		ShootDiskAccurate_voltage(11000, 1500);
 
 		// prep for future shots & disk pick up
 		SetFlywheelVoltage(9100);
 		pros::c::delay(500);
 
 		// turn towards 2 disks
-		Turn(-61, 75, 5000);
+		Turn(-58.5, 75, 5000);
 
 		// pick up 2 disks
-		Move(700, 100, 100, 3000);
+		Move(1400, 100, 100, 3000);
 
 		// Move backwards toward roller
-		Move(1400, -120, -120, 3000);
+		Move(-2800, 120, 120, 3000);
 
 		// turn towards roller
 		Turn(44, 100, 5000);
 
 		// turn roller
 		SetRollerVelocity(90);
-		Move(130, -100, -100, 1000);
+		Move(-160, 100, 100, 1000);
 		pros::c::delay(500);
 
 		// move out, prep to shoot
-		Move(50, 100, 100, 400);
+		Move(100, 100, 100, 400);
 
 		/*
 		ShootDiskAccurate_voltage(9100, 1000);
@@ -480,7 +485,7 @@ public:
 
 	void runSkills()
 	{
-		//Roller 1
+		// Roller 1
 		SetRollerVelocity(90);
 
 		Move(-215, 35, 35, 2000);
@@ -493,13 +498,13 @@ public:
 		Move(550, 100, 100, 1000);
 		pros::c::delay(2000);
 
-		//Turn
+		// Turn
 		Turn(90, 35, 5000);
 		pros::c::delay(500);
 
 		Move(-885, 70, 70, 5000);
 
-		//Roller 2
+		// Roller 2
 		SetRollerVelocity(90);
 
 		Move(-215, 70, 70, 1000);
@@ -508,7 +513,7 @@ public:
 		Move(215, 100, 100, 1000);
 		pros::c::delay(50);
 
-		//Turn and Move Across Field
+		// Turn and Move Across Field
 		Turn(-45, 35, 5000);
 		Move(5000, 100, 100, 20000);
 
@@ -519,6 +524,8 @@ public:
 
 	void run()
 	{
+		autonCompleted = true;
+		
 		if (autonSide == AutonLeft)
 		{
 			runLeft();
@@ -577,9 +584,13 @@ public:
 #endif
 
 		int dead_Zone = 10; // the dead zone for the joysticks
-		const int defaultFlyWheelSpeed = -69;
-		int FlyWheelSpeed = defaultFlyWheelSpeed;
+		const int defaultFlyWheelVoltage = -8900;
+		int FlyWheelVoltage = defaultFlyWheelVoltage;
 		int FlyWheelOn = 0;
+
+		if (autonCompleted) {
+			pros::c::adi_digital_write(trajector, HIGH);
+		}
 
 		while (true)
 		{
@@ -659,47 +670,50 @@ public:
 				// Flywheel is on low setting
 				if (master.get_digital_new_press(DIGITAL_A))
 				{
-					FlyWheelSpeed = defaultFlyWheelSpeed;
+					FlyWheelVoltage = defaultFlyWheelVoltage;
 				}
 
 			// Flywheel is powered, reverse
 			if (master.get_digital_new_press(DIGITAL_Y))
 			{
-				FlyWheelSpeed = -defaultFlyWheelSpeed;
+				FlyWheelVoltage = -defaultFlyWheelVoltage;
 			}
 
 			// Flywheel is stopped
 			if (master.get_digital_new_press(DIGITAL_B))
 			{
-				FlyWheelSpeed = 0;
+				FlyWheelVoltage = 0;
 			}
 
 			// Flywheel speed is high
 			if (master.get_digital_new_press(DIGITAL_X))
 			{
-				FlyWheelSpeed = -73;
+				FlyWheelVoltage = -9300;
 			}
 
-			FlyWheel1.move_velocity(FlyWheelSpeed);
-			Intake.move_velocity(FlyWheelSpeed);
+			FlyWheel1.move_voltage(FlyWheelVoltage);
+			Intake.move_voltage(FlyWheelVoltage);
 
 			if (master.get_digital_new_press(DIGITAL_R2))
 			{
-				FlyWheel1.move(-127);
-				Intake.move(-127);
+				FlyWheel1.move_voltage(-12000);
+				Intake.move_voltage(-12000);
 
-				for(int i = 0; i < 3 && master.get_digital(DIGITAL_R2); i++) {
+				for (int i = 0; i < 3 && master.get_digital(DIGITAL_R2); i++)
+				{
+					FlyWheel1.move_voltage(FlyWheelVoltage);
+					Intake.move_voltage(FlyWheelVoltage);
 					ShootDisk();
+					if (FlyWheelVoltage == defaultFlyWheelVoltage)
+				{
+					pros::c::delay(350);
 				}
-
-				if(FlyWheelSpeed == defaultFlyWheelSpeed) {
-					pros::c::delay(100);
+				else
+				{
+					pros::c::delay(550);
 				}
-				else {
-					pros::c::delay(250);
 				}
 			}
-
 
 			/**
 			 * End-game expansion

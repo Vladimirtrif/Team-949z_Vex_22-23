@@ -84,6 +84,7 @@ void opcontrol(void);
 #define ShootPort 'A'
 #define expansionPort 'B'
 #define expansionPort2 'D'
+#define trajector 'E'
 
 #define VisionPort 10
 #define RedSignature 1
