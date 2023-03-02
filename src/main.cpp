@@ -39,7 +39,7 @@ enum AutonMode
 	AutonNone = 0,
 };
 
-AutonMode autonSide = AutonRight;
+AutonMode autonSide = AutonLeft;
 
 
 void printAutonMessage()
@@ -396,18 +396,18 @@ public:
 		pros::c::delay(400);
 
 		// Turn to aim at goal
-		Turn(-17, 50, 500);
+		Turn(-15, 50, 500);
 
 		// Shoot the two preloads
-		ShootDiskAccurate_voltage(11250, 2500);
+		ShootDiskAccurate_voltage(11500, 2500);
 
-		ShootDiskAccurate_voltage(11250, 1250);
+		ShootDiskAccurate_voltage(11500, 1250);
 
 		// Start Roller
 		SetRollerVelocity(90);
 
 		// Turn back to start
-		Turn(17, 50, 500);
+		Turn(15, 50, 500);
 
 		// Move back towards roller
 		Move(-175, 70, 70, 350);
@@ -420,14 +420,14 @@ public:
 		SetFlywheelVoltage(12000);
 
 		// Turn towards stack of discs
-		Turn(33, 70, 1000);
+		Turn(32, 70, 1000);
 
 		// Pick up discs
 		Move(1700, 90, 90, 5000);
 		pros::c::delay(200);
 
 		// Turn towards goal
-		Turn(-56, 70, 5000);
+		Turn(-55, 70, 5000);
 
 		// Shoot three discs
 		ShootDiskAccurate_voltage(10500, 1000);
@@ -706,11 +706,11 @@ public:
 					ShootDisk();
 					if (FlyWheelVoltage == defaultFlyWheelVoltage)
 				{
-					pros::c::delay(350);
+					pros::c::delay(550);
 				}
 				else
 				{
-					pros::c::delay(550);
+					pros::c::delay(700);
 				}
 				}
 			}
