@@ -1,16 +1,8 @@
 #include "main.h"
 #include "pros/adi.h"
 #include "pros/llemu.hpp"
-
-// #define VISION_ENABLED
-#ifdef VISION_ENABLED
 #include "pros/vision.hpp"
-#endif
-
-// #define OPTICAL_ENABLED
-#ifdef OPTICAL_ENABLED
-#include "pros/optical.hpp"
-#endif
+#include "pros/vision.h"
 
 // Disables all the logging. Comment it out and uncomment next line to get logging working.
 #define log(...) (void)0
@@ -113,23 +105,17 @@ protected:
 	// Should be E_MOTOR_GEARSET_06 - 600 rpm
 	pros::Motor FlyWheel1{fly_wheel1, MOTOR_GEARSET_36, true}; // Pick correct gearset (36 is red)
 	pros::Motor Intake{intake, MOTOR_GEARSET_36, true};		   // Pick correct gearset (36 is red)
-#ifdef VISION_ENABLED
-	pros::Vision vision_sensor{VisionPort, pros::E_VISION_ZERO_CENTER};
-#endif
 
-#ifdef OPTICAL_ENABLED
+	pros::Vision vision_sensor{VisionPort, pros::E_VISION_ZERO_CENTER};
 	pros::vision_signature_s_t sig1 = pros::c::vision_signature_from_utility(1, -2123, -1397, -1760, 8387, 10923, 9654, 3.100, 0);
 	pros::vision_signature_s_t sig2 = pros::c::vision_signature_from_utility(2, 8257, 10627, 9442, -863, -373, -618, 2.000, 0);
-#endif
 
 	// constructor
 public:
 	Program()
 	{
-#ifdef OPTICAL_ENABLED
 		vision_sensor.set_signature(1, &sig1);
 		vision_sensor.set_signature(2, &sig2);
-#endif
 		pros::c::adi_pin_mode(ShootPort, OUTPUT);
 		pros::c::adi_digital_write(ShootPort, LOW);
 		pros::c::adi_pin_mode(expansionPort, OUTPUT);
@@ -153,21 +139,10 @@ public:
 		pros::c::delay(100);
 	}
 
-	double getFlywheelVelocity()
-	{
-		return -(FlyWheel1.get_actual_velocity() + Intake.get_actual_velocity()) / 2;
-	}
-
 	void SetRollerVelocity(unsigned int speed)
 	{
 		FlyWheel1.move_velocity(speed);
 		Intake.move_velocity(speed);
-	}
-
-	void SetFlywheelVelocity(unsigned int speed)
-	{
-		FlyWheel1.move_velocity(-speed);
-		Intake.move_velocity(-speed);
 	}
 
 	void SetFlywheelVoltage(unsigned int voltage)
@@ -176,20 +151,6 @@ public:
 		Intake.move_voltage(-voltage);
 	}
 
-	void ShootDiskAccurate_old(unsigned int speed, int delay)
-	{
-		SetFlywheelVelocity(speed);
-		pros::c::delay(delay);
-
-		for (int i = 0; i < 200; i++)
-		{
-			auto vel = getFlywheelVelocity();
-
-			log("%.1f\n", vel);
-			pros::c::delay(10);
-		}
-		ShootDisk();
-	}
 
 	void ShootDiskAccurate_voltage(unsigned int voltage, int delay)
 	{
@@ -197,14 +158,6 @@ public:
 		pros::c::delay(delay);
 
 		ShootDisk();
-	}
-
-	void ShootDiskAccurate(int voltage)
-	{
-		/*Set RPM to max to speed up the motor as fast as possible
-		FlyWheel1.move_velocity(-600);
-		Intake.move_velocity(-600);
-		while(c)*/
 	}
 
 	void SetDriveRelative(int ticks, int Lspeed, int Rspeed)
@@ -219,6 +172,7 @@ public:
 		right_back.move_relative(ticks, Rspeed);
 	}
 
+	
 	void SetDrive(int Lspeed, int Rspeed)
 	{
 
@@ -230,36 +184,6 @@ public:
 		right_back.move(Rspeed);
 	}
 };
-/*
-float Kp = 0.2;
-float Kd = 0.0;
-float Ki = 0.0;
-int targetVelocity = 0;
-
-int shootPID() {
-	while() {
-		lastError = currentVelocity;
-
-		float error = targetVelocity - getFlywheelVelocity()();
-		float deltaT = ;
-
-		float P = error * Kp
-
-		float I += error * deltaT * Ki
-
-		float D = ((currentVelocity - lastVelocity) / deltaT) * Kd;
-
-		int output = P + I - D;
-
-
-	}
-}
-
-int drivePID() {
-	while() {
-
-	}
-}*/
 
 /**
  *
@@ -340,7 +264,6 @@ private:
 		pros::c::delay(100);
 	}
 
-#ifdef VISION_ENABLED
 	void MoveVisionAssisted(int ticks, int speed)
 	{
 		int startPos = getPos();
@@ -386,7 +309,6 @@ private:
 		}
 		SetDrive(0, 0);
 	}
-#endif
 
 public:
 	void runLeft()
@@ -579,9 +501,6 @@ public:
 	void opcontrol()
 	{
 		pros::Controller master(CONTROLLER_MASTER);
-#ifdef OPTICAL_ENABLED
-		pros::Optical optical_sensor(opticalPort);
-#endif
 
 		int dead_Zone = 10; // the dead zone for the joysticks
 		const int defaultFlyWheelVoltage = -8900;
@@ -658,11 +577,6 @@ public:
 			{
 				SetDrive(leftSpeed * 1.574, rightSpeed * 1.574);
 			}
-
-#ifdef OPTICAL_ENABLED
-			auto rgb_value = optical_sensor.get_rgb();
-			if (master.get_digital(DIGITAL_R1) && !rgb_value.blue && !rgb_value.blue)
-#endif
 
 				/**
 				 * Flywheel
