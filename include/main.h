@@ -87,14 +87,8 @@ void opcontrol(void);
 #define trajector 'E'
 
 #define VisionPort 10
-#define RedSignature 1
-#define YellowSignature 2
-
-#define opticalPort 4
-
-#define RedSignatureId 1
-#define BlueSignatureId 2
-#define YellowSignatureId 3
+#define YellowSignature 1
+#define YellowSignatureId 1
 
 #ifdef __cplusplus
 /**

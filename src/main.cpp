@@ -107,15 +107,13 @@ protected:
 	pros::Motor Intake{intake, MOTOR_GEARSET_36, true};		   // Pick correct gearset (36 is red)
 
 	pros::Vision vision_sensor{VisionPort, pros::E_VISION_ZERO_CENTER};
-	pros::vision_signature_s_t sig1 = pros::c::vision_signature_from_utility(1, -2123, -1397, -1760, 8387, 10923, 9654, 3.100, 0);
-	pros::vision_signature_s_t sig2 = pros::c::vision_signature_from_utility(2, 8257, 10627, 9442, -863, -373, -618, 2.000, 0);
+	pros::vision_signature_s_t YELLOW_SIG = pros::c::vision_signature_from_utility(1, 1275, 1831, 1552, -3987, -3569, -3778, 8.800, 0);
 
 	// constructor
 public:
 	Program()
 	{
-		vision_sensor.set_signature(1, &sig1);
-		vision_sensor.set_signature(2, &sig2);
+		vision_sensor.set_signature(1, &YELLOW_SIG);
 		pros::c::adi_pin_mode(ShootPort, OUTPUT);
 		pros::c::adi_digital_write(ShootPort, LOW);
 		pros::c::adi_pin_mode(expansionPort, OUTPUT);
@@ -264,12 +262,11 @@ private:
 		pros::c::delay(100);
 	}
 
-	void MoveVisionAssisted(int ticks, int speed)
+	void MoveVisionAssisted(int ticks, int speed, int timeOut)
 	{
 		int startPos = getPos();
-		int timer = 350;
 
-		while (abs(getPos() - startPos) < ticks && timer > 0)
+		while (abs(getPos() - startPos) < ticks && timeOut > 0)
 		{
 			int Lspeed = speed;
 			int Rspeed = speed;
@@ -298,7 +295,7 @@ private:
 							// Lspeed = -50;
 						}
 					}
-					if (obj.width > 280)
+					if (obj.width > 150)
 					{ // checks if the object is too close
 						break;
 					}
@@ -306,6 +303,8 @@ private:
 			}
 
 			SetDrive(Lspeed * 127 / 200, Rspeed * 127 / 200);
+			pros::c::delay(5);
+			timeOut = timeOut - 5;
 		}
 		SetDrive(0, 0);
 	}
@@ -407,7 +406,7 @@ public:
 
 	void runSkills()
 	{
-		// Roller 1
+		/* Roller 1
 		SetRollerVelocity(90);
 
 		Move(-215, 35, 35, 2000);
@@ -442,6 +441,8 @@ public:
 		/*Expansion
 		pros::c::adi_digital_write(expansionPort2, HIGH);
 		pros::c::adi_digital_write(expansionPort, HIGH);*/
+
+		MoveVisionAssisted(5000, 100, 10000);
 	}
 
 	void run()
