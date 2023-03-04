@@ -301,7 +301,7 @@ private:
 		}
 
 		SetDrive(0, 0);
-		pros::c::delay(100);
+		pros::c::delay(200);
 	}
 
 	void Turn(double degrees, int speed, int timeOut)
@@ -481,36 +481,34 @@ public:
 	void runSkills()
 	{
 		//Roller 1
+		Move(-200, 35, 35, 1000);
 		SetRollerVelocity(90);
+		SetDrive(-30, -30);
+		pros::c::delay(350);
 
-		Move(-215, 35, 35, 2000);
-		pros::c::delay(200);
-
+		// Move from roller 1
 		Move(100, 100, 100, 1000);
-
 		SetFlywheelVoltage(8000);
-
 		Move(550, 100, 100, 1000);
-		pros::c::delay(2000);
 
 		//Turn
-		Turn(90, 35, 5000);
+		Turn(85, 35, 5000);
 		pros::c::delay(500);
 
-		Move(-885, 70, 70, 5000);
-
 		//Roller 2
+		SetFlywheelVoltage(0);
+		Move(-1200, 70, 70, 2000);
 		SetRollerVelocity(90);
+		SetDrive(-30, -30);
+		pros::c::delay(350);
 
-		Move(-215, 70, 70, 1000);
-		pros::c::delay(200);
-
+		// Move away from roller 2
 		Move(215, 100, 100, 1000);
 		pros::c::delay(50);
 
 		//Turn and Move Across Field
 		Turn(-45, 35, 5000);
-		Move(5000, 100, 100, 20000);
+		// Move(5000, 150, 150, 20000);
 
 		/*Expansion
 		pros::c::adi_digital_write(expansionPort2, HIGH);
@@ -577,7 +575,8 @@ public:
 #endif
 
 		int dead_Zone = 10; // the dead zone for the joysticks
-		const int defaultFlyWheelSpeed = -69;
+		const int defaultFlyWheelSpeed = -100;//-76;
+		const int highSpeed = -110; //-85;
 		int FlyWheelSpeed = defaultFlyWheelSpeed;
 		int FlyWheelOn = 0;
 
@@ -653,14 +652,14 @@ public:
 			if (master.get_digital(DIGITAL_R1) && !rgb_value.blue && !rgb_value.blue)
 #endif
 
-				/**
-				 * Flywheel
-				 */
-				// Flywheel is on low setting
-				if (master.get_digital_new_press(DIGITAL_A))
-				{
-					FlyWheelSpeed = defaultFlyWheelSpeed;
-				}
+			/**
+			 * Flywheel
+			 */
+			// Flywheel is on low setting
+			if (master.get_digital_new_press(DIGITAL_A))
+			{
+				FlyWheelSpeed = defaultFlyWheelSpeed;
+			}
 
 			// Flywheel is powered, reverse
 			if (master.get_digital_new_press(DIGITAL_Y))
@@ -677,11 +676,11 @@ public:
 			// Flywheel speed is high
 			if (master.get_digital_new_press(DIGITAL_X))
 			{
-				FlyWheelSpeed = -73;
+				FlyWheelSpeed = highSpeed;
 			}
 
-			FlyWheel1.move_velocity(FlyWheelSpeed);
-			Intake.move_velocity(FlyWheelSpeed);
+			FlyWheel1.move(FlyWheelSpeed);
+			Intake.move(FlyWheelSpeed);
 
 			if (master.get_digital_new_press(DIGITAL_R2))
 			{
@@ -689,15 +688,19 @@ public:
 				Intake.move(-127);
 
 				for(int i = 0; i < 3 && master.get_digital(DIGITAL_R2); i++) {
-					ShootDisk();
-				}
-
-				if(FlyWheelSpeed == defaultFlyWheelSpeed) {
+					pros::c::adi_digital_write(ShootPort, HIGH);
 					pros::c::delay(100);
-				}
-				else {
+
+					if(FlyWheelSpeed == defaultFlyWheelSpeed) {
+						pros::c::delay(0);
+					}
+					else {
+						pros::c::delay(150);
+					}
+					pros::c::adi_digital_write(ShootPort, LOW);
 					pros::c::delay(250);
 				}
+
 			}
 
 
