@@ -22,6 +22,7 @@ extern "C" char const *const _PROS_COMPILE_DIRECTORY = "";
 #define max(a, b) ((a) < (b) ? (b) : (a))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define sign(x) ((x) > 0 ? 1 : -1)
+#define abs(x) ((x) > 0 ? x : -x)
 
 enum AutonMode
 {
@@ -29,6 +30,14 @@ enum AutonMode
 	AutonRight = 2,
 	AutonSkills = 3,
 	AutonNone = 0,
+};
+
+enum Signatures
+{
+	// Has to start with 1!
+	Yellow = 1,
+	Blue = 2,
+	Red = 3,
 };
 
 AutonMode autonSide = AutonLeft;
@@ -107,13 +116,19 @@ protected:
 	pros::Motor Intake{intake, MOTOR_GEARSET_36, true};		   // Pick correct gearset (36 is red)
 
 	pros::Vision vision_sensor{VisionPort, pros::E_VISION_ZERO_CENTER};
-	pros::vision_signature_s_t YELLOW_SIG = pros::c::vision_signature_from_utility(1, 1275, 1831, 1552, -3987, -3569, -3778, 8.800, 0);
+	pros::vision_signature_s_t YELLOW_SIG = pros::c::vision_signature_from_utility(Signatures::Yellow, 1275, 1831, 1552, -3987, -3569, -3778, 8.800, 0);
+	pros::vision_signature_s_t BLUE_SIG = pros::c::vision_signature_from_utility(Signatures::Blue, -2571, -1031, -1800, 7753, 9363, 8558, 5.000, 0);
 
+	// Need to fill in actual signature!!!
+	pros::vision_signature_s_t RED_SIG = pros::c::vision_signature_from_utility(Signatures::Blue, -2571, -1031, -1800, 7753, 9363, 8558, 0.1, 0);
 	// constructor
 public:
 	Program()
 	{
-		vision_sensor.set_signature(1, &YELLOW_SIG);
+		vision_sensor.set_signature(Signatures::Yellow, &YELLOW_SIG);
+		vision_sensor.set_signature(Signatures::Blue, &BLUE_SIG);
+		vision_sensor.set_signature(Signatures::Red, &RED_SIG);
+		vision_sensor.set_exposure(80);
 		pros::c::adi_pin_mode(ShootPort, OUTPUT);
 		pros::c::adi_digital_write(ShootPort, LOW);
 		pros::c::adi_pin_mode(expansionPort, OUTPUT);
@@ -155,7 +170,10 @@ public:
 		SetFlywheelVoltage(voltage);
 		pros::c::delay(delay);
 
+		SetFlywheelVoltage(-12000);
 		ShootDisk();
+
+		SetFlywheelVoltage(voltage);
 	}
 
 	void SetDriveRelative(int ticks, int Lspeed, int Rspeed)
@@ -275,7 +293,7 @@ private:
 			{
 				pros::vision_object_s_t obj;
 
-				if (vision_sensor.read_by_size(0, 1, &obj) == 1 && obj.top_coord + obj.height > 0)
+				if (vision_sensor.read_by_size(0, 1, &obj) == 1 && obj.signature == Signatures::Yellow && obj.top_coord + obj.height > 0)
 				{
 					// Positive offset means goal is left due to sensor being mounted upside down
 					float offset = obj.x_middle_coord * sign(speed);
@@ -314,7 +332,6 @@ public:
 	{
 		// prep flywheel
 		SetFlywheelVoltage(12000);
-		pros::c::delay(400);
 
 		// Turn to aim at goal
 		Turn(-15, 50, 500);
@@ -407,30 +424,30 @@ public:
 	void runSkills()
 	{
 		/* Roller 1
+		Move(-200, 35, 35, 1000);
 		SetRollerVelocity(90);
-
-		Move(-215, 35, 35, 2000);
-		pros::c::delay(200);
+		SetDrive(-30,-30);
+		pros::c::delay(350);
 
 		Move(100, 100, 100, 1000);
 
 		SetFlywheelVoltage(8000);
 
 		Move(550, 100, 100, 1000);
-		pros::c::delay(2000);
+		pros::c::delay(1000);
 
 		// Turn
-		Turn(90, 35, 5000);
+		Turn(85, 35, 5000);
 		pros::c::delay(500);
 
-		Move(-885, 70, 70, 5000);
-
 		// Roller 2
-		SetRollerVelocity(90);
-
-		Move(-215, 70, 70, 1000);
-		pros::c::delay(200);
-
+        SetFlywheelVoltage(0);
+        Move(-1200, 70, 70, 2000);
+        SetRollerVelocity(90);
+        SetDrive(-30, -30);
+        pros::c::delay(350);
+		
+        // Move away from roller 2
 		Move(215, 100, 100, 1000);
 		pros::c::delay(50);
 
@@ -504,13 +521,17 @@ public:
 		pros::Controller master(CONTROLLER_MASTER);
 
 		int dead_Zone = 10; // the dead zone for the joysticks
-		const int defaultFlyWheelVoltage = -8900;
+		const int defaultFlyWheelVoltage = -8500;
+		int highFlywheelVoltage = -9000;
 		int FlyWheelVoltage = defaultFlyWheelVoltage;
 		int FlyWheelOn = 0;
 
 		if (autonCompleted) {
 			pros::c::adi_digital_write(trajector, HIGH);
 		}
+
+		unsigned int autoTurning = 0;
+		bool onTarget = false;
 
 		while (true)
 		{
@@ -570,6 +591,50 @@ public:
 				rightSpeed = analogY;
 			}
 
+			if (master.get_digital(DIGITAL_L2)) {
+				pros::vision_object_s_t obj;
+
+				// If you ue read_by_size(), and you have yellow signature in the list, you may get yellow disks in basket
+				// They might be uneven in bsket. It's better to specify specific signature.
+				obj = vision_sensor.get_by_sig(0, Signatures::Blue);
+				if (obj.signature != Signatures::Blue) {
+					obj = vision_sensor.get_by_sig(0, Signatures::Red);
+				}
+
+				if (obj.signature == Signatures::Blue || obj.signature == Signatures::Red)
+				{
+					autoTurning++;
+					// Positive offset means goal is on the left due to sensor being mounted upside down
+					float offset = obj.x_middle_coord * 1.0 / obj.width;
+					printf("offset = %.2f mid = %d, w = %d  top = %d\n", offset, obj.x_middle_coord, obj.width, obj.top_coord + obj.height);
+					
+					// we need to give it some push initially, but once roboto starts moving we need to reduce power
+					// not to over shoot.
+					if (abs(offset) < 0.1) {
+						printf("\n--- on target ---\n\n");
+						onTarget = true;
+						autoTurning = 0;
+						offset = 0;
+					} else if (autoTurning > 25)
+						offset = 30 * sign(offset);
+					else if (abs(offset) > 0.5)
+						offset = 40 * sign(offset);
+					else
+						offset = 37 * sign(offset);
+
+					// It's harder to tuen with both sides having same power, as it's easy to overshoot.
+					// At the same time putting power only on one set of wheels results in robot moving forward / backwards.
+					// It's better to have most power on one side, and a bit of power on another side not to let robot move forward.
+					rightSpeed = offset;
+					leftSpeed  = -offset / 1.8;
+				} else {
+					printf("   miss %d %d\n", vision_sensor.get_object_count(), obj.signature);
+				}
+			} else {
+				autoTurning = 0;
+				onTarget = false;
+			}
+
 			if (abs(leftSpeed) < 40 && abs(rightSpeed) < 40)
 			{
 				SetDrive(leftSpeed, rightSpeed);
@@ -579,14 +644,14 @@ public:
 				SetDrive(leftSpeed * 1.574, rightSpeed * 1.574);
 			}
 
-				/**
-				 * Flywheel
-				 */
-				// Flywheel is on low setting
-				if (master.get_digital_new_press(DIGITAL_A))
-				{
-					FlyWheelVoltage = defaultFlyWheelVoltage;
-				}
+			/**
+			 * Flywheel
+			 */
+			// Flywheel is on low setting
+			if (master.get_digital_new_press(DIGITAL_A))
+			{
+				FlyWheelVoltage = defaultFlyWheelVoltage;
+			}
 
 			// Flywheel is powered, reverse
 			if (master.get_digital_new_press(DIGITAL_Y))
@@ -603,30 +668,33 @@ public:
 			// Flywheel speed is high
 			if (master.get_digital_new_press(DIGITAL_X))
 			{
-				FlyWheelVoltage = -9300;
+				FlyWheelVoltage = highFlywheelVoltage;
 			}
 
 			FlyWheel1.move_voltage(FlyWheelVoltage);
 			Intake.move_voltage(FlyWheelVoltage);
 
-			if (master.get_digital_new_press(DIGITAL_R2))
+			if (master.get_digital_new_press(DIGITAL_R2) || onTarget)
 			{
-				FlyWheel1.move_voltage(-12000);
-				Intake.move_voltage(-12000);
+				SetFlywheelVoltage(12000);
 
-				for (int i = 0; i < 3 && master.get_digital(DIGITAL_R2) && !master.get_digital(DIGITAL_L1) && !master.get_digital(DIGITAL_R1); i++)
+				for (
+					int i = 0;
+					i < 3 &&
+						(master.get_digital(DIGITAL_R2) || onTarget && master.get_digital(DIGITAL_L2)) &&
+						!master.get_digital(DIGITAL_L1) &&
+						!master.get_digital(DIGITAL_R1);
+					i++)
 				{
-					FlyWheel1.move_voltage(FlyWheelVoltage);
-					Intake.move_voltage(FlyWheelVoltage);
 					ShootDisk();
 					if (FlyWheelVoltage == defaultFlyWheelVoltage)
-				{
-					pros::c::delay(550);
-				}
-				else
-				{
-					pros::c::delay(700);
-				}
+					{
+						pros::c::delay(200);
+					}
+					else
+					{
+						pros::c::delay(300);
+					}
 				}
 			}
 
