@@ -31,7 +31,7 @@ enum AutonMode
 	AutonNone = 0,
 };
 
-AutonMode autonSide = AutonLeft;
+AutonMode autonSide = AutonSkills;
 
 
 void printAutonMessage()
@@ -442,7 +442,22 @@ public:
 		pros::c::adi_digital_write(expansionPort2, HIGH);
 		pros::c::adi_digital_write(expansionPort, HIGH);*/
 
-		MoveVisionAssisted(5000, 100, 10000);
+		SetFlywheelVoltage(9400);
+		pros::c::delay(400);
+
+		ShootDiskAccurate_voltage(9400, 2000);
+
+		ShootDiskAccurate_voltage(9400, 1500);
+
+		Turn(-85, 50, 5000);
+		pros::c::delay(200);
+
+		SetFlywheelVoltage(9000);
+		pros::c::delay(250);
+
+		Move(1700, 70, 70, 50000);
+		pros::c::delay(500);
+		
 	}
 
 	void run()
@@ -504,7 +519,7 @@ public:
 		pros::Controller master(CONTROLLER_MASTER);
 
 		int dead_Zone = 10; // the dead zone for the joysticks
-		const int defaultFlyWheelVoltage = -8900;
+		const int defaultFlyWheelVoltage = -8810;
 		int FlyWheelVoltage = defaultFlyWheelVoltage;
 		int FlyWheelOn = 0;
 
@@ -603,7 +618,7 @@ public:
 			// Flywheel speed is high
 			if (master.get_digital_new_press(DIGITAL_X))
 			{
-				FlyWheelVoltage = -9300;
+				FlyWheelVoltage = -9210;
 			}
 
 			FlyWheel1.move_voltage(FlyWheelVoltage);
