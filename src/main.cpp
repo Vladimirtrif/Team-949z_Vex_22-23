@@ -459,22 +459,46 @@ public:
 		pros::c::adi_digital_write(expansionPort2, HIGH);
 		pros::c::adi_digital_write(expansionPort, HIGH);*/
 
-		SetFlywheelVoltage(9400);
+		//prep flywheel
+		SetFlywheelVoltage(8500);
 		pros::c::delay(400);
 
-		ShootDiskAccurate_voltage(9400, 2000);
+		//shoot preloads 
+		ShootDiskAccurate_voltage(8500, 2000);
 
-		ShootDiskAccurate_voltage(9400, 1500);
+		ShootDiskAccurate_voltage(8500, 2000);
+		pros::c::delay(100);
 
-		Turn(-85, 50, 5000);
+		//turn towards discs and pick them up
+		Turn(-90, 50, 5000);
 		pros::c::delay(200);
 
-		SetFlywheelVoltage(9000);
+		SetFlywheelVoltage(10000);
 		pros::c::delay(250);
 
-		Move(1700, 70, 70, 50000);
+		Move(1500, 50, 50, 8000);
+
+		//wait for intake to finish loading discs
+		SetFlywheelVoltage(10000);
+		pros::c::delay(1500);
+
+
+		//move back a bit and turn to shoot
+		Move(-700, 60, 60, 3000);
+		pros::c::delay(100);
+
+		Turn(105, 50, 10000);
 		pros::c::delay(500);
+
+		//shoot the three discs
+		ShootDiskAccurate_voltage(8750, 2000);
+
+		ShootDiskAccurate_voltage(8750, 2000);
+
+		ShootDiskAccurate_voltage(8750, 2000);
+		pros::c::delay(100);
 		
+		//turn towards other pile of three and then go do two rollers
 	}
 
 	void run()
