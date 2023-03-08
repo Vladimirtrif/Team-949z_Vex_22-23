@@ -537,7 +537,7 @@ public:
 
 		int dead_Zone = 10; // the dead zone for the joysticks
 		const int defaultFlyWheelVoltage = -8810;
-		const in highFlywheelVoltage = -9210;
+		const int highFlywheelVoltage = -9210;
 		int FlyWheelVoltage = defaultFlyWheelVoltage;
 		int FlyWheelOn = 0;
 
