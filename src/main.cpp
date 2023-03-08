@@ -423,42 +423,6 @@ public:
 
 	void runSkills()
 	{
-		/* Roller 1
-		Move(-200, 35, 35, 1000);
-		SetRollerVelocity(90);
-		SetDrive(-30,-30);
-		pros::c::delay(350);
-
-		Move(100, 100, 100, 1000);
-
-		SetFlywheelVoltage(8000);
-
-		Move(550, 100, 100, 1000);
-		pros::c::delay(1000);
-
-		// Turn
-		Turn(85, 35, 5000);
-		pros::c::delay(500);
-
-		// Roller 2
-        SetFlywheelVoltage(0);
-        Move(-1200, 70, 70, 2000);
-        SetRollerVelocity(90);
-        SetDrive(-30, -30);
-        pros::c::delay(350);
-		
-        // Move away from roller 2
-		Move(215, 100, 100, 1000);
-		pros::c::delay(50);
-
-		// Turn and Move Across Field
-		Turn(-45, 35, 5000);
-		Move(5000, 100, 100, 20000);
-
-		/*Expansion
-		pros::c::adi_digital_write(expansionPort2, HIGH);
-		pros::c::adi_digital_write(expansionPort, HIGH);*/
-
 		//prep flywheel
 		SetFlywheelVoltage(8500);
 		pros::c::delay(400);
@@ -498,7 +462,54 @@ public:
 		ShootDiskAccurate_voltage(8750, 2000);
 		pros::c::delay(100);
 		
-		//turn towards other pile of three and then go do two rollers
+		/*
+		//turn towards other pile of three
+		Turn(-195, 50, 10000)
+
+		//prep intake and move towards stack of three
+		SetFlywheelVoltage(10000);
+		pros::c::delay(250);
+		Move(2000, 50, 50, 8000);
+
+
+		//wait for it to pick up 
+		SetFlywheelVoltage(10000);
+		pros::c::delay(1500);
+		*/
+
+		//rollers
+		/* Roller 1
+		Move(-200, 35, 35, 1000);
+		SetRollerVelocity(90);
+		SetDrive(-30,-30);
+		pros::c::delay(350);
+
+		Move(100, 100, 100, 1000);
+
+		SetFlywheelVoltage(8000);
+
+		Move(550, 100, 100, 1000);
+		pros::c::delay(1000);
+
+		// Turn
+		Turn(85, 35, 5000);
+		pros::c::delay(500);
+
+		// Roller 2
+        SetFlywheelVoltage(0);
+        Move(-1200, 70, 70, 2000);
+        SetRollerVelocity(90);
+        SetDrive(-30, -30);
+        pros::c::delay(350);
+		
+        // Move away from roller 2
+		Move(215, 100, 100, 1000);
+		pros::c::delay(50);*/
+
+		/*Expansion
+		Turn(-30, 35, 5000);
+		pros::c::adi_digital_write(expansionPort2, HIGH);
+		pros::c::adi_digital_write(expansionPort, HIGH);*/
 	}
 
 	void run()
