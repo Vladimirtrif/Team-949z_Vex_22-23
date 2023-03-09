@@ -22,7 +22,7 @@ extern "C" char const *const _PROS_COMPILE_DIRECTORY = "";
 #define max(a, b) ((a) < (b) ? (b) : (a))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define sign(x) ((x) > 0 ? 1 : -1)
-#define abs(x) ((x) > 0 ? x : -x)
+#define abs(x) ((x) > 0 ? (x) : -(x))
 
 enum AutonMode
 {
@@ -257,7 +257,7 @@ private:
 		int ticks = ((degrees / 360) * fullCircleTicks);
 		int startAngle = getAngle();
 
-		printf("Turn degrees = %f S = %d StartAngle = %f \n", degrees, speed, startAngle);
+		printf("Turn degrees = %.2f S = %d StartAngle = %d ticks = %d getLeftPos = %d getRightPos = %d Timeout = %d \n", degrees, speed, startAngle, ticks, getLeftPos(), getRightPos(), timeOut);
 
 		left_front.move_relative(ticks * 1.005, speed);
 		left_middle.move_relative(ticks * 1.005, speed);
@@ -275,7 +275,7 @@ private:
 			counter = counter + 10;
 		}
 
-		printf(" Degrees Turned at End = %f \n", (getAngle() - startAngle));
+		printf(" abs Degrees Turned at End = %f degrees turned at end = %f counter = %d abs(degrees) = %.2f \n", abs(getAngle() - startAngle), (getAngle() - startAngle), counter, abs(degrees));
 		SetDrive(0, 0);
 		pros::c::delay(100);
 	}
@@ -424,17 +424,23 @@ public:
 	void runSkills()
 	{
 		//prep flywheel
-		SetFlywheelVoltage(8500);
+		SetFlywheelVoltage(6700);
 		pros::c::delay(400);
 
-		//shoot preloads 
-		ShootDiskAccurate_voltage(8500, 2000);
+		//move towards goal
+		Move(800, 60, 60, 3000);
 
-		ShootDiskAccurate_voltage(8500, 2000);
+		//shoot preloads 
+		ShootDiskAccurate_voltage(6700, 2000);
+
+		ShootDiskAccurate_voltage(6700, 2000);
 		pros::c::delay(100);
 
+		//move back
+		Move(-800, 60, 60, 3000);
+
 		//turn towards discs and pick them up
-		Turn(-90, 50, 5000);
+		Turn(-90, 50, 2000);
 		pros::c::delay(200);
 
 		SetFlywheelVoltage(10000);
@@ -444,42 +450,62 @@ public:
 
 		//wait for intake to finish loading discs
 		SetFlywheelVoltage(10000);
-		pros::c::delay(1500);
-
+		pros::c::delay(1000);
 
 		//move back a bit and turn to shoot
 		Move(-700, 60, 60, 3000);
 		pros::c::delay(100);
 
-		Turn(105, 50, 10000);
-		pros::c::delay(500);
+		Turn(105, 50, 2000);
+		pros::c::delay(100);
+
+		//move towards goal
+		Move(700, 60, 60, 3000);
+
+		SetFlywheelVoltage(6700);
+		pros::c::delay(400);
 
 		//shoot the three discs
-		ShootDiskAccurate_voltage(8750, 2000);
+		ShootDiskAccurate_voltage(6700, 2000);
 
-		ShootDiskAccurate_voltage(8750, 2000);
+		ShootDiskAccurate_voltage(6700, 2000);
 
-		ShootDiskAccurate_voltage(8750, 2000);
+		ShootDiskAccurate_voltage(6700, 2000);
 		pros::c::delay(100);
 		
-		/*
 		//turn towards other pile of three
-		Turn(-195, 50, 10000)
+		Turn(-172, 50, 3000);
 
 		//prep intake and move towards stack of three
 		SetFlywheelVoltage(10000);
 		pros::c::delay(250);
-		Move(2000, 50, 50, 8000);
-
+		Move(2700, 50, 50, 9000);
 
 		//wait for it to pick up 
 		SetFlywheelVoltage(10000);
 		pros::c::delay(1500);
-		*/
 
-		//rollers
-		/* Roller 1
-		Move(-200, 35, 35, 1000);
+		//prep intake and move towards goal
+		SetFlywheelVoltage(6700);
+		pros::c::delay(250);
+		Move(-2700, 50, 50, 8000);
+
+		//turn to shoot
+		Turn(172, 50, 3000);
+
+		//shoot the three discs
+		ShootDiskAccurate_voltage(6700, 2000);
+
+		ShootDiskAccurate_voltage(6700, 2000);
+
+		ShootDiskAccurate_voltage(6700, 2000);
+		pros::c::delay(100);
+		
+
+		/*rollers
+		 //Roller 1
+		Turn(90, 50, 3000);
+		Move(-1500, 35, 35, 1000);
 		SetRollerVelocity(90);
 		SetDrive(-30,-30);
 		pros::c::delay(350);
@@ -504,7 +530,7 @@ public:
 		
         // Move away from roller 2
 		Move(215, 100, 100, 1000);
-		pros::c::delay(50);*/
+		pros::c::delay(50);
 
 		/*Expansion
 		Turn(-30, 35, 5000);
