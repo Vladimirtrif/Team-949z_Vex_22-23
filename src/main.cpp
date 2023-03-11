@@ -40,7 +40,7 @@ enum Signatures
 	Red = 3,
 };
 
-AutonMode autonSide = AutonSkills;
+AutonMode autonSide = AutonRight;
 
 
 void printAutonMessage()
@@ -118,9 +118,7 @@ protected:
 	pros::Vision vision_sensor{VisionPort, pros::E_VISION_ZERO_CENTER};
 	pros::vision_signature_s_t YELLOW_SIG = pros::c::vision_signature_from_utility(Signatures::Yellow, 1275, 1831, 1552, -3987, -3569, -3778, 8.800, 0);
 	pros::vision_signature_s_t BLUE_SIG = pros::c::vision_signature_from_utility(Signatures::Blue, -2571, -1031, -1800, 7753, 9363, 8558, 5.000, 0);
-
-	// Need to fill in actual signature!!!
-	pros::vision_signature_s_t RED_SIG = pros::c::vision_signature_from_utility(Signatures::Blue, -2571, -1031, -1800, 7753, 9363, 8558, 0.1, 0);
+	pros::vision_signature_s_t RED_SIG = pros::c::vision_signature_from_utility(Signatures::Red, 7365, 7925, 7646, -477, 89, -194, 6.200, 0);
 	// constructor
 public:
 	Program()
@@ -331,21 +329,22 @@ public:
 	void runLeft()
 	{
 		// prep flywheel
-		SetFlywheelVoltage(12000);
+		SetFlywheelVoltage(10500);
+		pros::c::delay(750);
 
 		// Turn to aim at goal
-		Turn(-15, 50, 500);
+		Turn(-19, 50, 500);
 
 		// Shoot the two preloads
-		ShootDiskAccurate_voltage(11500, 2500);
+		ShootDiskAccurate_voltage(10500, 1800);
 
-		ShootDiskAccurate_voltage(11500, 1250);
+		ShootDiskAccurate_voltage(10500, 1800);
 
 		// Start Roller
 		SetRollerVelocity(90);
 
-		// Turn back to start
-		Turn(15, 50, 500);
+		//Turn back to start
+		Turn(19, 50, 500);
 
 		// Move back towards roller
 		Move(-175, 70, 70, 350);
@@ -358,21 +357,24 @@ public:
 		SetFlywheelVoltage(12000);
 
 		// Turn towards stack of discs
-		Turn(32, 70, 1000);
+		Turn(40, 70, 1000);
 
 		// Pick up discs
 		Move(1700, 90, 90, 5000);
 		pros::c::delay(200);
 
 		// Turn towards goal
-		Turn(-55, 70, 5000);
+		Turn(-59.4, 70, 5000);
+
+		SetFlywheelVoltage(10175);
+		pros::c::delay(500);
 
 		// Shoot three discs
-		ShootDiskAccurate_voltage(10500, 1000);
+		ShootDiskAccurate_voltage(10175, 1000);
 
-		ShootDiskAccurate_voltage(10500, 1500);
+		ShootDiskAccurate_voltage(10175, 1200);
 
-		ShootDiskAccurate_voltage(10500, 1000);
+		ShootDiskAccurate_voltage(10175, 1200);
 	}
 
 	void runRight()
@@ -601,9 +603,10 @@ public:
 		const int highFlywheelVoltage = -9210;
 		int FlyWheelVoltage = defaultFlyWheelVoltage;
 		int FlyWheelOn = 0;
+		bool trajectorDown = true;
 
 		if (autonCompleted) {
-			pros::c::adi_digital_write(trajector, HIGH);
+			pros::c::adi_digital_write(trajector, LOW);
 		}
 
 		unsigned int autoTurning = 0;
@@ -775,15 +778,19 @@ public:
 			}
 
 			//override for trajector
-			if (master.get_digital(DIGITAL_DOWN))
+			if (master.get_digital_new_press(DIGITAL_DOWN))
 			{
-				pros::c::adi_digital_write(trajector, HIGH);
+				trajectorDown = !trajectorDown;
+				
 			}
 
-			if (master.get_digital(DIGITAL_UP))
-			{
-				pros::c::adi_digital_write(trajector, LOW);
-			}
+			if (trajectorDown == false) {
+					pros::c::adi_digital_write(trajector, HIGH);
+					//FlyWheelVoltage = .9 * FlyWheelVoltage;
+				} else {
+					pros::c::adi_digital_write(trajector, LOW);
+					//FlyWheelVoltage = (1 / .9) * FlyWheelVoltage;
+				}
 
 			/**
 			 * End-game expansion
