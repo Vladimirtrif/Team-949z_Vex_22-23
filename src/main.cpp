@@ -116,9 +116,9 @@ protected:
 	pros::Motor Intake{intake, MOTOR_GEARSET_36, true};		   // Pick correct gearset (36 is red)
 
 	pros::Vision vision_sensor{VisionPort, pros::E_VISION_ZERO_CENTER};
-	pros::vision_signature_s_t YELLOW_SIG = pros::c::vision_signature_from_utility(Signatures::Yellow, 1275, 1831, 1552, -3987, -3569, -3778, 8.800, 0);
-	pros::vision_signature_s_t BLUE_SIG = pros::c::vision_signature_from_utility(Signatures::Blue, -2571, -1031, -1800, 7753, 9363, 8558, 5.000, 0);
-	pros::vision_signature_s_t RED_SIG = pros::c::vision_signature_from_utility(Signatures::Red, 7365, 7925, 7646, -477, 89, -194, 6.200, 0);
+	pros::vision_signature_s_t YELLOW_SIG = pros::c::vision_signature_from_utility(Signatures::Yellow, 319, 1545, 932, -4399, -3593, -3996, 1.300, 0);
+	pros::vision_signature_s_t BLUE_SIG = pros::c::vision_signature_from_utility(Signatures::Blue, -1761, -611, -1186, 5173, 8193, 6684, 3.700, 0);
+	pros::vision_signature_s_t RED_SIG = pros::c::vision_signature_from_utility(Signatures::Red, 7365, 7925, 7646, -477, 89, -194, 7.700, 0);
 	// constructor
 public:
 	Program()
@@ -381,7 +381,7 @@ public:
 		pros::c::delay(200);
 
 		// Turn towards goal
-		Turn(-59.4, 70, 5000);
+		Turn(-59.3, 70, 5000);
 
 		SetFlywheelVoltage(10175);
 		pros::c::delay(500);
@@ -397,49 +397,45 @@ public:
 	void runRight()
 	{
 		// prep flywheel
-		SetFlywheelVoltage(10200);
-		pros::c::delay(850);
+		SetFlywheelVoltage(10450);
+		pros::c::delay(1750);
 
 		Move(950, 100, 100, 3000);
 		pros::c::delay(50);
 
-		Turn(24.5, 100, 1000);
+		Turn(26.5, 100, 1000);
 
-		ShootDiskAccurate_voltage(10200, 1000);
+		ShootDiskAccurate_voltage(10450, 1000);
 
-		ShootDiskAccurate_voltage(10200, 1500);
+		ShootDiskAccurate_voltage(10450, 1500);
 
-		ShootDiskAccurate_voltage(10200, 1500);
+		ShootDiskAccurate_voltage(10450, 1500);
 
 		//prep for future shots & disk pick up
 		SetFlywheelVoltage(9100);
 		pros::c::delay(500);
 
 		// turn towards 2 disks
-		Turn(-65, 75, 2000);
+		Turn(-68, 75, 2000);
 
 		// pick up 2 disks
 		Move(1400, 100, 100, 3000);
 
 		// Move backwards toward roller
-		Move_Old(2825, -120, -120, 3000);
+		Move_Old(2780, -120, -120, 3000);
 
 		// turn towards roller
-		Turn(42, 100, 2000);
+		Turn(43.5, 100, 2000);
 
 		// turn roller
 		SetRollerVelocity(90);
-		Move(-320, 100, 100, 1000);
-		pros::c::delay(350);
+		Move(-340, 100, 100, 1000);
+		pros::c::delay(250);
 
 		SetFlywheelVoltage(11000);
 
 		// move out, prep to shoot
 		Move(100, 100, 100, 400);
-
-		Turn(16, 60, 250);
-
-		ShootDiskAccurate_voltage(11000, 500);
 	}
 
 	void runSkills()
