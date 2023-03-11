@@ -235,7 +235,24 @@ private:
 		int counter = 0;
 		int startPos = getPos();
 
-		SetDriveRelative(ticks, Rspeed * 127 / 200, Lspeed * 127 / 200);
+		SetDriveRelative(ticks, Lspeed * 127 / 200, Rspeed * 127 / 200);
+
+		while (abs(getPos() - startPos) < abs(ticks) && counter <= timeOut)
+		{
+			pros::c::delay(10);
+			counter = counter + 10;
+		}
+
+		SetDrive(0, 0);
+		pros::c::delay(100);
+	}
+
+	void Move_Old(int ticks, int Lspeed, int Rspeed, int timeOut)
+	{
+		int counter = 0;
+		int startPos = getPos();
+
+		SetDrive(Lspeed * 127 / 200, Rspeed * 127 / 200);
 
 		while (abs(getPos() - startPos) < abs(ticks) && counter <= timeOut)
 		{
@@ -380,47 +397,49 @@ public:
 	void runRight()
 	{
 		// prep flywheel
-		SetFlywheelVoltage(12000);
-		pros::c::delay(400);
+		SetFlywheelVoltage(10200);
+		pros::c::delay(850);
 
 		Move(950, 100, 100, 3000);
 		pros::c::delay(50);
 
-		Turn(23, 100, 5000);
+		Turn(24.5, 100, 1000);
 
-		ShootDiskAccurate_voltage(11000, 2000);
+		ShootDiskAccurate_voltage(10200, 1000);
 
-		ShootDiskAccurate_voltage(11000, 1500);
+		ShootDiskAccurate_voltage(10200, 1500);
 
-		ShootDiskAccurate_voltage(11000, 1500);
+		ShootDiskAccurate_voltage(10200, 1500);
 
-		// prep for future shots & disk pick up
+		//prep for future shots & disk pick up
 		SetFlywheelVoltage(9100);
 		pros::c::delay(500);
 
 		// turn towards 2 disks
-		Turn(-58.5, 75, 5000);
+		Turn(-65, 75, 2000);
 
 		// pick up 2 disks
 		Move(1400, 100, 100, 3000);
 
 		// Move backwards toward roller
-		Move(-2800, 120, 120, 3000);
+		Move_Old(2825, -120, -120, 3000);
 
 		// turn towards roller
-		Turn(44, 100, 5000);
+		Turn(42, 100, 2000);
 
 		// turn roller
 		SetRollerVelocity(90);
-		Move(-160, 100, 100, 1000);
-		pros::c::delay(500);
+		Move(-320, 100, 100, 1000);
+		pros::c::delay(350);
+
+		SetFlywheelVoltage(11000);
 
 		// move out, prep to shoot
 		Move(100, 100, 100, 400);
 
-		/*
-		ShootDiskAccurate_voltage(9100, 1000);
-		ShootDiskAccurate_voltage(9100, 1000);*/
+		Turn(16, 60, 250);
+
+		ShootDiskAccurate_voltage(11000, 500);
 	}
 
 	void runSkills()
